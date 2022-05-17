@@ -1,0 +1,154 @@
+---
+title: "Plot for covariates"
+output: 
+  html_document: 
+    toc: yes
+    keep_md: yes
+date: '2022-05-02'
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Preparations
+
+## Packages
+
+```{r}
+library(lme4)
+library(emmeans)
+library(rio)
+library(dplyr)
+library(vjihelpers)
+library(ggplot2)
+
+```
+
+## Custom functions
+
+```{r}
+source("../custom_functions.R")
+source("../modglmer_logit.R")
+```
+
+## Data
+
+```{r}
+fdat<-import("../../data/processed/fdat.xlsx")
+```
+
+## Data exclusions
+
+```{r}
+names(fdat)
+
+exdat<-fdat %>%
+  dplyr::select(childlessness,
+                gndr.c,age10.c,
+                minority.c,lrgen.z,
+                lrecon.z,galtan.z,
+                lrecon_salience.z,galtan_salience.z,
+                cntry,anweight) %>%
+  na.omit()
+```
+
+## Variable centering
+
+```{r}
+exdat<-
+  group_mean_center(
+    data=exdat,group.var="cntry",
+    vars=c("lrgen.z","lrecon.z","galtan.z",
+           "lrecon_salience.z","galtan_salience.z"),
+    grand.init = F)
+
+```
+
+# Descriptives
+
+```{r}
+table(exdat$cntry,exdat$childlessness)
+round(100*prop.table(table(exdat$cntry,
+                           exdat$childlessness),1),1)
+
+prop.table(table(exdat$childlessness))
+```
+
+# Analysis 
+
+
+## Baserate only
+
+
+```{r}
+mod0<-
+  glmer(childlessness~(1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+
+summary(mod0)
+```
+
+## Covariates
+
+```{r}
+mod1<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+(1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+
+summary(mod1)
+```
+
+## age non-linear
+
+```{r}
+mod2<-
+  glmer(childlessness~gndr.c+age10.c+I(age10.c^2)+I(age10.c^3)+
+          minority.c+(1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+
+summary(mod2)
+anova(mod1,mod2)
+```
+
+### Plot for age
+
+### Plot
+
+```{r}
+
+p.age<-
+  emmip(mod2, ~ age10.c,
+        at=list(age10.c = seq(from=-3,to=3,by=0.1)),
+        plotit=F,CIs=TRUE,type="response")
+
+head(p.age)
+
+#p$ethnic_minority=
+#  ifelse(p$minority.c==(-0.5),
+#         "Ethnic majority","Ethnic minority")
+#p$galtan_salience<-p$tvar
+#levels(p$galtan_salience)
+
+
+
+p2<-ggplot(p.age,aes(y=yvar,x=xvar))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("Age")+
+  ylab("P(Childlessness)")
+p2
+
+png(filename = 
+      "../../results/figures/galtan_galtan_salience.png",
+    units = "cm",
+    width = 20.0,height=10.0,res = 300)
+p2
+dev.off()
+```
+
+Something strange is going on with the age variable

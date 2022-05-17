@@ -1,0 +1,1362 @@
+---
+title: "Other exploratory analyses"
+output: 
+  html_document: 
+    toc: yes
+    keep_md: yes
+date: '2022-05-02'
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Preparations
+
+## Packages
+
+```{r}
+library(lme4)
+library(emmeans)
+library(rio)
+library(dplyr)
+library(vjihelpers)
+library(ggplot2)
+
+```
+
+## Custom functions
+
+```{r}
+source("../custom_functions.R")
+source("../modglmer_logit.R")
+```
+
+## Data
+
+```{r}
+fdat<-import("../../data/processed/fdat.xlsx")
+CHES<-
+  import("../../data/processed/CHES_2014.vote.keys.combined.xlsx")
+
+
+```
+
+## Code galtan as categorical
+
+```{r}
+m.galtan<-mean(CHES$galtan,na.rm=T)
+sd.galtan<-sd(CHES$galtan,na.rm=T)
+
+m.galtan_salience<-mean(CHES$galtan_salience,na.rm=T)
+sd.galtan_salience<-sd(CHES$galtan_salience,na.rm=T)
+
+fdat$galtan.cat<-
+  case_when(fdat$galtan>(m.galtan+sd.galtan)~"TAN",
+            fdat$galtan<(m.galtan-sd.galtan)~"GAL",
+            is.na(fdat$galtan)~NA_character_,
+            TRUE~"MID")
+table(fdat$galtan.cat,useNA="always")
+
+fdat$galtan_salience.cat<-
+  case_when(fdat$galtan_salience>
+              (m.galtan_salience+sd.galtan_salience)~"3.High_Salience",
+            fdat$galtan_salience<
+              (m.galtan_salience-sd.galtan_salience)~"1.Low_Salience",
+            is.na(fdat$galtan_salience)~NA_character_,
+            TRUE~"2.Mid_Salience")
+
+table(fdat$galtan_salience.cat,useNA="always")
+
+table(fdat$galtan.cat,
+      fdat$galtan_salience.cat,useNA="always")
+
+fdat$galtan_salience.bin<-
+  case_when(fdat$galtan_salience>
+              (m.galtan_salience+sd.galtan_salience)~"Salient",
+            is.na(fdat$galtan_salience)~NA_character_,
+            TRUE~"Non_Salient")
+
+table(fdat$galtan_salience.bin,useNA="always")
+
+table(fdat$galtan.cat,
+      fdat$galtan_salience.bin,useNA="always")
+
+prop.table(
+  table(fdat$galtan.cat,
+      fdat$galtan_salience.bin,useNA="always"),1)
+
+```
+
+## Data exclusions
+
+```{r}
+
+
+
+exdat<-fdat %>%
+  dplyr::select(childlessness,
+                gndr.c,age10.c,
+                minority.c,lrgen.z,
+                lrecon.z,galtan.z,
+                lrecon_salience.z,galtan_salience.z,
+                galtan.cat,
+                galtan_salience.cat,
+                galtan_salience.bin,
+                galtan,
+                galtan_salience,
+                cntry,anweight) %>%
+  na.omit()
+```
+
+## Variable centering
+
+```{r}
+exdat<-
+  group_mean_center(
+    data=exdat,group.var="cntry",
+    vars=c("lrgen.z","lrecon.z","galtan.z",
+           "lrecon_salience.z","galtan_salience.z"),
+    grand.init = F)
+
+```
+
+
+# Three-way interaction between GAL-TAN, GAL-TAN -salience and minority/gender/age
+
+## Fixed
+
+```{r}
+mod2.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+summary(mod2.galtan)
+```
+
+## Random
+
+```{r}
+mod3.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+
+          (galtan.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod3.galtan)
+
+anova(mod2.galtan,mod3.galtan)
+```
+
+## Random no random effect correlation
+
+```{r}
+mod3.no.recov.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+
+          (galtan.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod3.no.recov.galtan)
+
+anova(mod2.galtan,mod3.no.recov.galtan)
+```
+Model without random effect seems to be sufficient
+
+## galtan salience fixed main effect
+
+```{r}
+mod4.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod4.galtan)
+```
+
+## galtan salience random main effect
+
+```{r}
+mod5.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          (galtan_salience.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod5.galtan)
+```
+
+## galtan salience random main effect, no re correlation
+
+```{r}
+mod5.no.recov.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          (galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod5.no.recov.galtan)
+anova(mod4.galtan,mod5.no.recov.galtan)
+```
+
+## fixed interaction between galtan and galtan salience
+
+```{r}
+mod6.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          (galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod6.galtan)
+anova(mod5.no.recov.galtan,mod6.galtan)
+```
+
+### marginal effects
+
+```{r}
+emtrends(mod6.galtan,
+         var="galtan.z.gmc",
+         specs="galtan_salience.z.gmc",
+         at=list(galtan_salience.z.gmc=c(-1,0,1)),infer=c(T,T))
+
+```
+
+
+### Plot
+
+```{r}
+
+p<-
+  emmip(mod6.galtan, galtan_salience.z.gmc ~ galtan.z.gmc,
+        at=list(galtan_salience.z.gmc = c(-1,0,1),
+                #minority.c = c(-0.5,0.5),
+                galtan.z.gmc=seq(from=-2,to=2,by=0.02)),
+        plotit=F,CIs=TRUE,type="response")
+
+head(p)
+
+#p$ethnic_minority=
+#  ifelse(p$minority.c==(-0.5),
+#         "Ethnic majority","Ethnic minority")
+p$galtan_salience<-p$tvar
+levels(p$galtan_salience)
+
+
+
+p2<-ggplot(p,aes(y=yvar,x=xvar,color=galtan_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("GAL-TAN")+
+  ylab("P(Childlessness)")
+p2
+
+png(filename = 
+      "../../results/figures/galtan_galtan_salience.png",
+    units = "cm",
+    width = 20.0,height=10.0,res = 300)
+p2
+dev.off()
+```
+
+### Non-extrapolated plot
+
+```{r}
+
+min.low<-
+  min(exdat[exdat$galtan_salience.z.gmc<=(-1),
+            "galtan.z.gmc"])
+max.low<-
+  max(exdat[exdat$galtan_salience.z.gmc<=(-1),
+            "galtan.z.gmc"])
+
+
+p$filter.low<-
+  ifelse(p$galtan_salience.z.gmc==(-1) &
+           (p$galtan.z.gmc<min.low | 
+              p$galtan.z.gmc>max.low),0,1)
+
+table(p$filter.low)
+
+min.mid<-
+  min(exdat[exdat$galtan_salience.z.gmc>(-1) |
+              exdat$galtan_salience.z.gmc<(1),
+            "galtan.z.gmc"])
+max.mid<-
+  max(exdat[exdat$galtan_salience.z.gmc>(-1) |
+              exdat$galtan_salience.z.gmc<(1),
+            "galtan.z.gmc"])
+
+
+p$filter.mid<-
+  ifelse(p$galtan_salience.z.gmc==(0) &
+           (p$galtan.z.gmc<min.mid | 
+              p$galtan.z.gmc>max.mid),0,1)
+
+table(p$filter.mid)
+
+min.high<-
+  min(exdat[exdat$galtan_salience.z.gmc>=(1) ,
+            "galtan.z.gmc"])
+max.high<-
+  max(exdat[exdat$galtan_salience.z.gmc>=(1) ,
+            "galtan.z.gmc"])
+
+
+p$filter.high<-
+  ifelse(p$galtan_salience.z.gmc==(1) &
+           (p$galtan.z.gmc<min.high | 
+              p$galtan.z.gmc>max.high),0,1)
+
+table(p$filter.high)
+
+p.ex<-p[p$filter.low!=0 & p$filter.mid!=0 & p$filter.high!=0,]
+
+
+p1<-ggplot(p.ex,aes(y=yvar,x=xvar,color=galtan_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("GAL-TAN")+
+  ylab("P(Childlessness)")
+p1
+
+png(filename = 
+      "../../results/figures/galtan_galtan_salience_nonextrp.png",
+    units = "cm",
+    width = 20.0,height=10.0,res = 300)
+p1
+dev.off()
+```
+
+## random interaction between galtan and galtan salience
+
+```{r}
+mod7.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          (galtan_salience.z.gmc+
+             galtan.z.gmc:galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod7.galtan)
+anova(mod6.galtan,mod7.galtan)
+```
+
+No support for random interaction effect
+
+### marginal effects
+
+```{r}
+emtrends(mod7.galtan,
+         var="galtan.z.gmc",
+         specs="galtan_salience.z.gmc",
+         at=list(galtan_salience.z.gmc=c(-1,0,1)),infer=c(T,T))
+```
+
+## Three-way with minority.c
+
+### Random effect for minority.c
+
+```{r}
+mod8.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          (minority.c+galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod8.galtan)
+anova(mod6.galtan,mod8.galtan)
+```
+
+### Fixed Two-way interactions with minority.c
+
+```{r}
+mod9.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:minority.c+
+          galtan_salience.z.gmc:minority.c+
+          (galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod9.galtan)
+anova(mod6.galtan,mod9.galtan)
+```
+
+### Random Two-way interactions with minority.c
+
+```{r}
+mod10.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:minority.c+
+          galtan_salience.z.gmc:minority.c+
+          (galtan_salience.z.gmc+
+             galtan.z.gmc:minority.c+
+          galtan_salience.z.gmc:minority.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod10.galtan)
+anova(mod9.galtan,mod10.galtan)
+```
+
+### Fixed Three-way interaction with minority.c
+
+```{r}
+mod11.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:minority.c+
+          galtan_salience.z.gmc:minority.c+
+          galtan.z.gmc:galtan_salience.z.gmc:minority.c+
+          (galtan_salience.z.gmc:minority.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod11.galtan)
+anova(mod9.galtan,mod11.galtan)
+```
+
+There is a three-way interaction
+
+
+#### marginal effects
+
+```{r}
+emtrends(mod11.galtan,
+         var="galtan.z.gmc",
+         specs=c("galtan_salience.z.gmc",
+                 "minority.c"),
+         at=list(galtan_salience.z.gmc=c(-1,0,1),
+                 minority.c=c(-0.5,0.5)),
+         infer=c(T,T))
+
+```
+
+
+
+### Random Three-way interaction with minority.c
+
+```{r}
+mod12.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:minority.c+
+          galtan_salience.z.gmc:minority.c+
+          galtan.z.gmc:galtan_salience.z.gmc:minority.c+
+          (galtan_salience.z.gmc:minority.c+
+             galtan.z.gmc:galtan_salience.z.gmc:minority.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod12.galtan)
+anova(mod11.galtan,mod12.galtan)
+```
+
+### Remove all random slopes from the final model
+
+```{r}
+mod13.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:minority.c+
+          galtan_salience.z.gmc:minority.c+
+          galtan.z.gmc:galtan_salience.z.gmc:minority.c+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod13.galtan)
+anova(mod13.galtan,mod11.galtan)
+```
+
+#### marginal effects
+
+```{r}
+emtrends(mod13.galtan,
+         var="galtan.z.gmc",
+         specs=c("galtan_salience.z.gmc",
+                 "minority.c"),
+         at=list(galtan_salience.z.gmc=c(-1,0,1),
+                 minority.c=c(-0.5,0.5)),
+         infer=c(T,T))
+
+```
+
+#### Plot
+
+```{r}
+
+p<-
+  emmip(mod11.galtan, minority.c|galtan_salience.z.gmc ~ galtan.z.gmc,
+        at=list(galtan_salience.z.gmc = c(-1,0,1),
+                minority.c = c(-0.5,0.5),
+                galtan.z.gmc=seq(from=-2,to=2,by=0.02)),
+        plotit=F,CIs=TRUE,type="response")
+
+head(p)
+
+p$ethnic_minority=
+  ifelse(p$minority.c==(-0.5),
+         "Ethnic majority","Ethnic minority")
+p$galtan_salience<-p$tvar
+levels(p$galtan_salience)
+levels(p$galtan_salience)<-c("-1","-1","0","0","1","1")
+
+
+p1<-ggplot(p,aes(y=yvar,x=xvar,color=galtan_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("GAL-TAN")+
+  ylab("P(Childlessness)")+
+  #scale_color_manual(values=rep(c("red","yellow","green"),2))+
+  facet_grid(~ethnic_minority)
+p1
+
+png(filename = 
+      "../../results/figures/galtan_galtan_salience_minority.png",
+    units = "cm",
+    width = 20.0,height=10.0,res = 300)
+p1
+dev.off()
+```
+
+#### Non-extrapolated plot
+
+```{r}
+
+min.low.eth<-
+  min(exdat[exdat$galtan_salience.z.gmc<=(-1) &
+              exdat$minority.c==0.5,
+            "galtan.z.gmc"])
+max.low.eth<-
+  max(exdat[exdat$galtan_salience.z.gmc<=(-1) &
+              exdat$minority.c==0.5,
+            "galtan.z.gmc"])
+
+min.low.non.eth<-
+  min(exdat[exdat$galtan_salience.z.gmc<=(-1) &
+              exdat$minority.c==-0.5,
+            "galtan.z.gmc"])
+max.low.non.eth<-
+  max(exdat[exdat$galtan_salience.z.gmc<=(-1) &
+              exdat$minority.c==-0.5,
+            "galtan.z.gmc"])
+
+head(p)
+
+p$filter.low<-
+  ifelse(
+    ((p$galtan_salience.z.gmc==(-1) & p$minority.c==0.5) &
+       (p$galtan.z.gmc<min.low.eth | 
+          p$galtan.z.gmc>max.low.eth)) |
+      ((p$galtan_salience.z.gmc==(-1) & p$minority.c==-0.5) &
+         (p$galtan.z.gmc<min.low.non.eth | 
+            p$galtan.z.gmc>max.low.non.eth))
+    ,0,1)
+
+table(p$filter.low)
+
+
+
+
+min.mid.eth<-
+  min(exdat[exdat$galtan_salience.z.gmc>(-1) &
+              exdat$galtan_salience.z.gmc<(1)
+              &
+              exdat$minority.c==0.5,
+            "galtan.z.gmc"])
+
+max.mid.eth<-
+  max(exdat[exdat$galtan_salience.z.gmc>(-1) &
+              exdat$galtan_salience.z.gmc<(1)
+            &
+              exdat$minority.c==0.5,
+            "galtan.z.gmc"])
+
+min.mid.non.eth<-
+  min(exdat[exdat$galtan_salience.z.gmc>(-1) &
+              exdat$galtan_salience.z.gmc<(1)
+            &
+              exdat$minority.c==-0.5,
+            "galtan.z.gmc"])
+max.mid.non.eth<-
+  max(exdat[exdat$galtan_salience.z.gmc>(-1) &
+              exdat$galtan_salience.z.gmc<(1)
+            &
+              exdat$minority.c==-0.5,
+            "galtan.z.gmc"])
+
+p$filter.mid<-
+  ifelse(
+    ((p$galtan_salience.z.gmc==(0) & p$minority.c==0.5) &
+       (p$galtan.z.gmc<min.mid.eth | 
+          p$galtan.z.gmc>max.mid.eth)) |
+      ((p$galtan_salience.z.gmc==(0) & p$minority.c==-0.5) &
+         (p$galtan.z.gmc<min.mid.non.eth | 
+            p$galtan.z.gmc>max.mid.non.eth))
+    ,0,1)
+
+table(p$filter.mid)
+
+
+
+min.high.eth<-
+  min(exdat[exdat$galtan_salience.z.gmc>=(1) &
+              exdat$minority.c==0.5,
+            "galtan.z.gmc"])
+max.high.eth<-
+  max(exdat[exdat$galtan_salience.z.gmc>=(1) &
+              exdat$minority.c==0.5,
+            "galtan.z.gmc"])
+
+min.high.non.eth<-
+  min(exdat[exdat$galtan_salience.z.gmc>=(1) &
+              exdat$minority.c==-0.5,
+            "galtan.z.gmc"])
+max.high.non.eth<-
+  max(exdat[exdat$galtan_salience.z.gmc>=(1) &
+              exdat$minority.c==-0.5,
+            "galtan.z.gmc"])
+
+head(p)
+
+p$filter.high<-
+  ifelse(
+    ((p$galtan_salience.z.gmc==(1) & p$minority.c==0.5) &
+       (p$galtan.z.gmc<min.high.eth | 
+          p$galtan.z.gmc>max.high.eth)) |
+      ((p$galtan_salience.z.gmc==(1) & p$minority.c==-0.5) &
+         (p$galtan.z.gmc<min.high.non.eth | 
+            p$galtan.z.gmc>max.high.non.eth))
+    ,0,1)
+
+table(p$filter.high)
+
+
+
+p.ex<-p[p$filter.low!=0 & p$filter.mid!=0 & p$filter.high!=0,]
+names(p.ex)
+
+p1<-ggplot(p.ex,aes(y=yvar,x=xvar,color=galtan_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("GAL-TAN")+
+  ylab("P(Childlessness)")+
+  #scale_color_manual(values=rep(c("red","yellow","green"),2))+
+  facet_grid(~ethnic_minority)
+p1
+
+png(filename = 
+      "../../results/figures/galtan_galtan_salience_minority_nonextrp.png",
+    units = "cm",
+    width = 20.0,height=10.0,res = 300)
+p1
+dev.off()
+```
+
+### Add cntry-level minority.c main effect
+
+```{r}
+mincntry<-exdat %>%
+  group_by(cntry) %>%
+  summarise(minority.c.gm=100*mean(minority.c+0.5))
+mincntry
+
+mincntry$minority.lvl2<-
+  mincntry$minority.c.gm-mean(mincntry$minority.c.gm)
+
+exdat<-left_join(
+  x=exdat,
+  y=mincntry,
+  by="cntry"
+)
+
+mod14.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          minority.lvl2+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:minority.c+
+          galtan_salience.z.gmc:minority.c+
+          galtan.z.gmc:galtan_salience.z.gmc:minority.c+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod14.galtan)
+anova(mod13.galtan,mod14.galtan)
+```
+
+#### marginal effects
+
+```{r}
+emtrends(mod14.galtan,
+         var="galtan.z.gmc",
+         specs=c("galtan_salience.z.gmc",
+                 "minority.c"),
+         at=list(galtan_salience.z.gmc=c(-1,0,1),
+                 minority.c=c(-0.5,0.5)),
+         infer=c(T,T))
+
+```
+
+### Add cntry-level minority.c interactions with the focal variables
+
+```{r}
+
+mod15.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          minority.lvl2+
+          galtan.z.gmc:minority.lvl2+
+          galtan_salience.z.gmc:minority.lvl2+
+          galtan.z.gmc:galtan_salience.z.gmc:minority.lvl2+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:minority.c+
+          galtan_salience.z.gmc:minority.c+
+          galtan.z.gmc:galtan_salience.z.gmc:minority.c+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod15.galtan)
+anova(mod14.galtan,mod15.galtan)
+
+```
+
+#### marginal effects
+
+```{r}
+emtrends(mod15.galtan,
+         var="galtan.z.gmc",
+         specs=c("galtan_salience.z.gmc",
+                 "minority.c"),
+         at=list(galtan_salience.z.gmc=c(-1,0,1),
+                 minority.c=c(-0.5,0.5)),
+         infer=c(T,T))
+
+```
+
+
+# Three-way interaction between GAL-TAN, GAL-TAN -salience and gender
+
+
+## Three-way with gndr.c
+
+### Random effect for gndr.c
+
+```{r}
+mod8.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          (gndr.c+galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod8.galtan)
+anova(mod6.galtan,mod8.galtan)
+```
+
+### Fixed Two-way interactions with gndr.c
+
+```{r}
+mod9.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:gndr.c+
+          galtan_salience.z.gmc:gndr.c+
+          (galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod9.galtan)
+anova(mod6.galtan,mod9.galtan)
+```
+
+### Random Two-way interactions with gndr.c
+
+```{r}
+mod10.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:gndr.c+
+          galtan_salience.z.gmc:gndr.c+
+          (galtan_salience.z.gmc+
+             galtan.z.gmc:gndr.c+
+          galtan_salience.z.gmc:gndr.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod10.galtan)
+anova(mod9.galtan,mod10.galtan)
+```
+
+### Fixed Three-way interaction with gndr.c
+
+```{r}
+mod11.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:gndr.c+
+          galtan_salience.z.gmc:gndr.c+
+          galtan.z.gmc:galtan_salience.z.gmc:gndr.c+
+          (galtan_salience.z.gmc:gndr.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod11.galtan)
+anova(mod9.galtan,mod11.galtan)
+```
+
+There is a three-way interaction
+
+
+#### marginal effects
+
+```{r}
+emtrends(mod11.galtan,
+         var="galtan.z.gmc",
+         specs=c("galtan_salience.z.gmc",
+                 "gndr.c"),
+         at=list(galtan_salience.z.gmc=c(-1,0,1),
+                 gndr.c=c(-0.5,0.5)),
+         infer=c(T,T))
+
+```
+
+
+
+### Random Three-way interaction with gndr.c
+
+```{r}
+mod12.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:gndr.c+
+          galtan_salience.z.gmc:gndr.c+
+          galtan.z.gmc:galtan_salience.z.gmc:gndr.c+
+          (galtan_salience.z.gmc:gndr.c+
+             galtan.z.gmc:galtan_salience.z.gmc:gndr.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod12.galtan)
+anova(mod11.galtan,mod12.galtan)
+```
+
+### Remove all random slopes from the final model
+
+```{r}
+mod13.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:gndr.c+
+          galtan_salience.z.gmc:gndr.c+
+          galtan.z.gmc:galtan_salience.z.gmc:gndr.c+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod13.galtan)
+anova(mod13.galtan,mod11.galtan)
+```
+
+#### marginal effects
+
+```{r}
+emtrends(mod13.galtan,
+         var="galtan.z.gmc",
+         specs=c("galtan_salience.z.gmc",
+                 "gndr.c"),
+         at=list(galtan_salience.z.gmc=c(-1,0,1),
+                 gndr.c=c(-0.5,0.5)),
+         infer=c(T,T))
+
+```
+
+### Plot
+
+```{r}
+
+p<-
+  emmip(mod13.galtan, gndr.c|galtan_salience.z.gmc ~ galtan.z.gmc,
+        at=list(galtan_salience.z.gmc = c(-1,0,1),
+                gndr.c = c(-0.5,0.5),
+                galtan.z.gmc=seq(from=-2,to=2,by=0.02)),
+        plotit=F,CIs=TRUE,type="response")
+
+head(p)
+
+p$gender=
+  ifelse(p$gndr.c==(-0.5),
+         "Male","Female")
+p$galtan_salience<-p$tvar
+levels(p$galtan_salience)
+levels(p$galtan_salience)<-c("-1","-1","0","0","1","1")
+
+
+p1<-ggplot(p,aes(y=yvar,x=xvar,color=galtan_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("GAL-TAN")+
+  ylab("P(Childlessness)")+
+  #scale_color_manual(values=rep(c("red","yellow","green"),2))+
+  facet_grid(~gender)
+p1
+
+png(filename = 
+      "../../results/figures/galtan_galtan_salience_gndr.png",
+    units = "cm",
+    width = 20.0,height=10.0,res = 300)
+p1
+dev.off()
+```
+
+### Non-extrapolated plot
+
+```{r}
+
+min.low<-
+  min(exdat[exdat$galtan_salience.z.gmc<=(-1),
+            "galtan.z.gmc"])
+max.low<-
+  max(exdat[exdat$galtan_salience.z.gmc<=(-1),
+            "galtan.z.gmc"])
+
+
+p$filter.low<-
+  ifelse(p$galtan_salience.z.gmc==(-1) &
+           (p$galtan.z.gmc<min.low | 
+              p$galtan.z.gmc>max.low),0,1)
+
+table(p$filter.low)
+
+min.mid<-
+  min(exdat[exdat$galtan_salience.z.gmc>(-1) |
+              exdat$galtan_salience.z.gmc<(1),
+            "galtan.z.gmc"])
+max.mid<-
+  max(exdat[exdat$galtan_salience.z.gmc>(-1) |
+              exdat$galtan_salience.z.gmc<(1),
+            "galtan.z.gmc"])
+
+
+p$filter.mid<-
+  ifelse(p$galtan_salience.z.gmc==(0) &
+           (p$galtan.z.gmc<min.mid | 
+              p$galtan.z.gmc>max.mid),0,1)
+
+table(p$filter.mid)
+
+min.high<-
+  min(exdat[exdat$galtan_salience.z.gmc>=(1) ,
+            "galtan.z.gmc"])
+max.high<-
+  max(exdat[exdat$galtan_salience.z.gmc>=(1) ,
+            "galtan.z.gmc"])
+
+
+p$filter.high<-
+  ifelse(p$galtan_salience.z.gmc==(1) &
+           (p$galtan.z.gmc<min.high | 
+              p$galtan.z.gmc>max.high),0,1)
+
+table(p$filter.high)
+
+p.ex<-p[p$filter.low!=0 & p$filter.mid!=0 & p$filter.high!=0,]
+
+
+p1<-ggplot(p.ex,aes(y=yvar,x=xvar,color=galtan_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("GAL-TAN")+
+  ylab("P(Childlessness)")+
+  #scale_color_manual(values=rep(c("red","yellow","green"),2))+
+  facet_grid(~gender)
+p1
+
+png(filename = 
+      "../../results/figures/galtan_galtan_salience_gndr_nonextrp.png",
+    units = "cm",
+    width = 20.0,height=10.0,res = 300)
+p1
+dev.off()
+```
+
+
+# Three-way interaction between GAL-TAN, GAL-TAN -salience and age10.c
+
+
+## Three-way with age10.c
+
+### Random effect for age10.c
+
+```{r}
+mod8.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          (age10.c+galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod8.galtan)
+anova(mod6.galtan,mod8.galtan)
+```
+
+### Fixed Two-way interactions with age10.c
+
+```{r}
+mod9.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:age10.c+
+          galtan_salience.z.gmc:age10.c+
+          (galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod9.galtan)
+anova(mod6.galtan,mod9.galtan)
+```
+
+### Random Two-way interactions with age10.c
+
+```{r}
+mod10.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:age10.c+
+          galtan_salience.z.gmc:age10.c+
+          (galtan_salience.z.gmc+
+             galtan.z.gmc:age10.c+
+          galtan_salience.z.gmc:age10.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod10.galtan)
+anova(mod9.galtan,mod10.galtan)
+```
+
+### Fixed Three-way interaction with age10.c
+
+```{r}
+mod11.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:age10.c+
+          galtan_salience.z.gmc:age10.c+
+          galtan.z.gmc:galtan_salience.z.gmc:age10.c+
+          (galtan_salience.z.gmc:age10.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod11.galtan)
+anova(mod9.galtan,mod11.galtan)
+```
+
+There is a three-way interaction
+
+
+#### marginal effects
+
+```{r}
+emtrends(mod11.galtan,
+         var="galtan.z.gmc",
+         specs=c("galtan_salience.z.gmc",
+                 "age10.c"),
+         at=list(galtan_salience.z.gmc=c(-1,0,1),
+                 age10.c=c(-0.5,0.5)),
+         infer=c(T,T))
+
+```
+
+
+
+### Random Three-way interaction with age10.c
+
+```{r}
+mod12.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:age10.c+
+          galtan_salience.z.gmc:age10.c+
+          galtan.z.gmc:galtan_salience.z.gmc:age10.c+
+          (galtan_salience.z.gmc:age10.c+
+             galtan.z.gmc:galtan_salience.z.gmc:age10.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod12.galtan)
+anova(mod11.galtan,mod12.galtan)
+```
+
+### Remove all random slopes from the final model
+
+```{r}
+mod13.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          galtan.z.gmc:age10.c+
+          galtan_salience.z.gmc:age10.c+
+          galtan.z.gmc:galtan_salience.z.gmc:age10.c+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod13.galtan)
+
+```
+
+#### marginal effects
+
+```{r}
+emtrends(mod13.galtan,
+         var="galtan.z.gmc",
+         specs=c("galtan_salience.z.gmc",
+                 "age10.c"),
+         at=list(galtan_salience.z.gmc=c(-1,0,1),
+                 age10.c=c(-20,-10,0,10,20)),
+         infer=c(T,T))
+
+```
+
+### Plot
+
+```{r}
+
+p<-
+  emmip(mod13.galtan, age10.c|galtan_salience.z.gmc ~ galtan.z.gmc,
+        at=list(galtan_salience.z.gmc = c(-1,0,1),
+                age10.c=c(-2,0,2),
+                galtan.z.gmc=seq(from=-2,to=2,by=0.02)),
+        plotit=F,CIs=TRUE,type="response")
+
+head(p)
+
+
+p$galtan_salience<-p$tvar
+levels(p$galtan_salience)
+levels(p$galtan_salience)<-rep(c("-1","0","1"),each=5)
+
+
+p1<-ggplot(p,aes(y=yvar,x=xvar,color=galtan_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("GAL-TAN")+
+  ylab("P(Childlessness)")+
+  #scale_color_manual(values=rep(c("red","yellow","green"),2))+
+  facet_grid(~age10.c)
+p1
+
+png(filename = 
+      "../../results/figures/galtan_galtan_salience_age10.png",
+    units = "cm",
+    width = 20.0,height=10.0,res = 300)
+p1
+dev.off()
+```
+
+# Categorical analysis
+
+## covariate model
+
+```{r}
+mod1<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+```
+
+## galtan main effect
+
+```{r}
+mod2.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.cat+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod2.galtan)
+anova(mod1,mod2.galtan)
+
+emmeans(mod2.galtan,specs="galtan.cat",type="link")
+emmeans(mod2.galtan,specs="galtan.cat",type="response")
+pairs(emmeans(mod2.galtan,specs="galtan.cat",type="link"),
+      adjust="none")
+pairs(emmeans(mod2.galtan,specs="galtan.cat",type="response"),
+      adjust="none")
+```
+
+## galtan_salience main effect
+
+```{r}
+mod3.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.cat+
+          galtan_salience.bin+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod3.galtan)
+anova(mod2.galtan,mod3.galtan)
+
+
+```
+
+## galtan_salience interaction effect
+
+```{r eval=FALSE, include=FALSE}
+mod4.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.cat+
+          galtan_salience.bin+
+          galtan.cat:galtan_salience.bin+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = 
+          glmerControl(optimizer="bobyqa",
+                       optCtrl = list(maxfun = 1000000)))
+summary(mod4.galtan)
+anova(mod3.galtan,mod4.galtan)
+
+
+```
+
+
+
+```{r}
+sinf<-sessionInfo()
+print(sinf,locale=F)
+```

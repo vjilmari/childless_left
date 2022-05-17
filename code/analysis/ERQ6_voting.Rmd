@@ -1,0 +1,150 @@
+---
+title: "ERQ6. Voting"
+output: 
+  html_document: 
+    toc: yes
+    keep_md: yes
+date: '2022-05-02'
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ERQ6. Is childlessness associated with not having voted in the previous national elections, despite being eligible to vote?
+
+# Preparations
+
+## Packages
+
+```{r}
+library(lme4)
+library(emmeans)
+library(rio)
+library(dplyr)
+library(vjihelpers)
+library(ggplot2)
+
+```
+
+## Custom functions
+
+```{r}
+source("../custom_functions.R")
+source("../modglmer_logit.R")
+```
+
+## Data
+
+```{r}
+fdat<-import("../../data/processed/fdat.xlsx")
+```
+
+## Code West and post-communist countries
+
+```{r}
+table(fdat$cntry)
+
+fdat$West_vs_post_comm<-
+  case_when(fdat$cntry == "AT" |
+              fdat$cntry == "BE" |
+              fdat$cntry == "CH" |
+              fdat$cntry == "DE" |
+              fdat$cntry == "DK" |
+              fdat$cntry == "ES" |
+              fdat$cntry == "FI" |
+              fdat$cntry == "FR" |
+              fdat$cntry == "GB" |
+              fdat$cntry == "IE" |
+              fdat$cntry == "IL" |
+              fdat$cntry == "NL" |
+              fdat$cntry == "NO" |
+              fdat$cntry == "PT" |
+              fdat$cntry == "SE" ~ -0.5,
+            TRUE~0.5)
+
+table(fdat$West_vs_post_comm,useNA="always")
+```
+
+## Voting and eligibility
+
+```{r}
+table(fdat$vote)
+table(fdat$vote.c)
+
+```
+
+## Data exclusions
+
+```{r}
+
+exdat<-fdat %>%
+  dplyr::select(childlessness,
+                gndr.c,age10.c,
+                minority.c,
+                vote.c,
+                cntry,anweight) %>%
+  na.omit()
+
+```
+
+## Variable centering
+
+```{r}
+#exdat<-
+#  group_mean_center(
+#    data=exdat,group.var="cntry",
+#    vars=c("international_security.z",
+#           "antielite_salience.z"),
+#    grand.init = F)
+
+```
+
+
+# Analysis 
+
+## Fixed main effect
+
+```{r}
+mod2.vote<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          vote.c+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+summary(mod2.vote)
+```
+
+## Random main effect
+
+```{r}
+mod3.vote<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          vote.c+
+          (vote.c|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod3.vote)
+
+anova(mod2.vote,mod3.vote)
+
+mod3.vote.no.recov<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          vote.c+
+          (vote.c||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod3.vote.no.recov)
+
+anova(mod2.vote,mod3.vote.no.recov)
+anova(mod3.vote.no.recov,mod3.vote)
+```
+
+
+```{r}
+sinf<-sessionInfo()
+print(sinf,locale=F)
+```

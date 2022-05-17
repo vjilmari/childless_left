@@ -1,0 +1,310 @@
+---
+title: "ERQ5. West vs. post-communist moderation"
+output: 
+  html_document: 
+    toc: yes
+    keep_md: yes
+date: '2022-05-02'
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ERQ5. Are the associations between childlessness and the ideology positions, salience of anti-elitism and (anti-)corruption, and policy positions of the party for which one has voted different in Western Europe and in post-communist countries?
+
+Random slopes were detected for international_security and antielite_salience.
+
+
+# Preparations
+
+## Packages
+
+```{r}
+library(lme4)
+library(emmeans)
+library(rio)
+library(dplyr)
+library(vjihelpers)
+library(ggplot2)
+
+```
+
+## Custom functions
+
+```{r}
+source("../custom_functions.R")
+source("../modglmer_logit.R")
+```
+
+## Data
+
+```{r}
+fdat<-import("../../data/processed/fdat.xlsx")
+```
+
+## Code West and post-communist countries
+
+```{r}
+table(fdat$cntry)
+
+fdat$West_vs_post_comm<-
+  case_when(fdat$cntry == "AT" |
+              fdat$cntry == "BE" |
+              fdat$cntry == "CH" |
+              fdat$cntry == "DE" |
+              fdat$cntry == "DK" |
+              fdat$cntry == "ES" |
+              fdat$cntry == "FI" |
+              fdat$cntry == "FR" |
+              fdat$cntry == "GB" |
+              fdat$cntry == "IE" |
+              fdat$cntry == "IL" |
+              fdat$cntry == "NL" |
+              fdat$cntry == "NO" |
+              fdat$cntry == "PT" |
+              fdat$cntry == "SE" ~ -0.5,
+            TRUE~0.5)
+
+table(fdat$West_vs_post_comm,useNA="always")
+```
+
+## Data exclusions
+
+```{r}
+
+exdat<-fdat %>%
+  dplyr::select(childlessness,
+                gndr.c,age10.c,
+                minority.c,
+                West_vs_post_comm,
+                international_security.z,
+                antielite_salience.z,
+                cntry,anweight) %>%
+  na.omit()
+
+```
+
+## Variable centering
+
+```{r}
+exdat<-
+  group_mean_center(
+    data=exdat,group.var="cntry",
+    vars=c("international_security.z",
+           "antielite_salience.z"),
+    grand.init = F)
+
+```
+
+
+# Analysis 
+
+## international_security
+
+### Fixed main effect
+
+```{r}
+mod2.international_security<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          international_security.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+summary(mod2.international_security)
+```
+
+### Random main effect
+
+```{r}
+mod3.international_security<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          international_security.z.gmc+
+          (international_security.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod3.international_security)
+
+anova(mod2.international_security,mod3.international_security)
+```
+
+### West vs. post-communist main effect
+
+```{r}
+mod4.international_security<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          West_vs_post_comm+
+          international_security.z.gmc+
+          (international_security.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod4.international_security)
+
+anova(mod3.international_security,mod4.international_security)
+```
+
+### West vs. post-communist x international_security interaction
+
+```{r}
+mod5.international_security<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          West_vs_post_comm+
+          international_security.z.gmc+
+          West_vs_post_comm:international_security.z.gmc+
+          (international_security.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod5.international_security)
+
+anova(mod4.international_security,mod5.international_security)
+```
+
+#### Marginal effects
+
+```{r}
+emtrends(mod5.international_security,
+         var="international_security.z.gmc",
+         specs="West_vs_post_comm",
+         at=list(West_vs_post_comm=c(-0.5,0.5)),infer=c(T,T))
+
+emtrends(mod5.international_security,
+         var="international_security.z.gmc",
+         specs="West_vs_post_comm",
+         at=list(West_vs_post_comm=c(-0.5,0.5)),infer=c(T,T),
+         regrid="response")
+```
+
+#### Plot
+
+```{r}
+
+preds.mod5.international_security<-
+  predict(mod5.international_security,re.form=NULL)
+
+plot.dat<-
+  data.frame('logit_childlessness'=preds.mod5.international_security,
+             'West_vs_Post_Communists'=
+               ifelse(exdat$West_vs_post_comm==-0.5,"Western","Post-Communist"),
+             'international_security'=exdat$international_security.z.gmc,
+             'Country'=exdat$cntry,
+             'Childlessness'=exdat$childlessness)
+
+ggplot(plot.dat,aes(y=logit_childlessness,
+                    x=international_security,
+                    color=West_vs_Post_Communists,
+                    fill=West_vs_Post_Communists))+
+  geom_smooth(method="lm")+
+  ylab("logit p(Childlessness)")+
+  xlab("Favors versus opposes country troop deployment")
+```
+
+## antielite_salience
+
+### Fixed main effect
+
+```{r}
+mod2.antielite_salience<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          antielite_salience.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+summary(mod2.antielite_salience)
+```
+
+### Random main effect
+
+```{r}
+mod3.antielite_salience<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          antielite_salience.z.gmc+
+          (antielite_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod3.antielite_salience)
+
+anova(mod2.antielite_salience,mod3.antielite_salience)
+```
+
+### West vs. post-communist main effect
+
+```{r}
+mod4.antielite_salience<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          West_vs_post_comm+
+          antielite_salience.z.gmc+
+          (antielite_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod4.antielite_salience)
+
+anova(mod3.antielite_salience,mod4.antielite_salience)
+```
+
+### West vs. post-communist x antielite_salience interaction
+
+```{r}
+mod5.antielite_salience<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          West_vs_post_comm+
+          antielite_salience.z.gmc+
+          West_vs_post_comm:antielite_salience.z.gmc+
+          (antielite_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod5.antielite_salience)
+
+anova(mod4.antielite_salience,mod5.antielite_salience)
+```
+
+#### Marginal effects
+
+```{r}
+emtrends(mod5.antielite_salience,
+         var="antielite_salience.z.gmc",
+         specs="West_vs_post_comm",
+         at=list(West_vs_post_comm=c(-0.5,0.5)),infer=c(T,T))
+
+emtrends(mod5.antielite_salience,
+         var="antielite_salience.z.gmc",
+         specs="West_vs_post_comm",
+         at=list(West_vs_post_comm=c(-0.5,0.5)),infer=c(T,T),
+         regrid="response")
+```
+
+
+#### Plot
+
+```{r}
+
+preds.mod5.antielite_salience<-
+  predict(mod5.antielite_salience,re.form=NULL)
+
+plot.dat<-
+  data.frame('logit_childlessness'=preds.mod5.antielite_salience,
+             'West_vs_Post_Communists'=
+               ifelse(exdat$West_vs_post_comm==-0.5,"Western","Post-Communist"),
+             'antielite_salience'=exdat$antielite_salience.z.gmc,
+             'Country'=exdat$cntry,
+             'Childlessness'=exdat$childlessness)
+
+ggplot(plot.dat,aes(y=logit_childlessness,
+                    x=antielite_salience,
+                    color=West_vs_Post_Communists,
+                    fill=West_vs_Post_Communists))+
+  geom_smooth(method="lm")+
+  ylab("logit p(Childlessness)")+
+  xlab("Antielite salience")
+```
+
+```{r}
+sinf<-sessionInfo()
+print(sinf,locale=F)
+```
