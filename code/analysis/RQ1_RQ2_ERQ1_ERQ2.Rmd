@@ -12,6 +12,8 @@ date: '2022-05-02'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+From: https://osf.io/er4v5 
+
 RQ1. Is childlessness associated with the three Chapel Hill rated political ideology (Left-Right, Economic Left-Right, GAL-TAN) positions of the party for which one has voted? 
 
 H1. Regarding GAL-TAN, we expect childless people to have voted closer to the GAL pole of the dimension.
@@ -32,12 +34,16 @@ ERQ2. Is childlessness associated with any of the 15 Chapel Hill rated policy po
 ## Packages
 
 ```{r}
+
 library(lme4)
 library(emmeans)
 library(rio)
 library(dplyr)
 library(vjihelpers)
 library(ggplot2)
+library(MetBrewer)
+library(tibble)
+library(Hmisc)
 
 ```
 
@@ -45,7 +51,7 @@ library(ggplot2)
 
 ```{r}
 source("../custom_functions.R")
-source("../modglmer_logit.R")
+
 ```
 
 ## Data
@@ -57,10 +63,10 @@ fdat<-import("../../data/processed/fdat.xlsx")
 ## Data exclusions
 
 ```{r}
-names(fdat)
 
 exdat<-fdat %>%
   dplyr::select(childlessness,
+                gndr.f,agea,minority,
                 gndr.c,age10.c,minority.c,
                 lrgen,
                 lrecon,galtan,
@@ -102,7 +108,38 @@ exdat$lrecon_salience.z.gmc<-
   exdat$lrecon_salience.gmc/sd.lrecon_salience
 ```
 
-# Descriptives
+# Descriptive statistics
+
+## Sample 
+
+```{r}
+# n countries
+length(unique(exdat$cntry))
+
+
+# n initial observations
+nrow(fdat[fdat$cntry!="IL",])
+
+# n who reported voting
+table(fdat[fdat$cntry!="IL","vote"],useNA="always")
+
+# n for whom CHES was available
+
+table(rowSums(is.na(fdat[fdat$cntry!="IL",
+                   c("galtan","lrgen","lrecon")])),
+              useNA="always")
+
+21684/37623
+21684-21374
+
+#range between countries
+range(table(exdat$cntry))
+
+```
+
+## Childlessness
+
+### Unweighted
 
 ```{r}
 table(exdat$cntry,exdat$childlessness)
@@ -110,6 +147,126 @@ round(100*prop.table(table(exdat$cntry,
                            exdat$childlessness),1),1)
 
 prop.table(table(exdat$childlessness))
+```
+
+### Weighted
+
+```{r}
+exdat %>%
+  group_by(cntry) %>%
+  count(childlessness,wt=anweight) %>%
+  ungroup() %>%
+  group_by(cntry) %>%
+  mutate(total=sum(n),percentage=round(100*n/total,1)) %>%
+  filter(childlessness==1) %>%
+  dplyr::select(cntry,percentage)
+
+exdat %>%
+  count(childlessness,wt=anweight) %>%
+  mutate(total=sum(n),percentage=round(100*n/total,1))
+
+round(weighted.mean(exdat$childlessness,w=exdat$anweight),2)
+round(sqrt(wtd.var(exdat$childlessness,w=exdat$anweight)),2)
+```
+
+## Covariates
+
+### Age
+
+```{r}
+round(weighted.mean(exdat$agea,w=exdat$anweight),2)
+round(sqrt(wtd.var(exdat$agea,w=exdat$anweight)),2)
+```
+
+### Gender
+
+```{r}
+exdat %>%
+  count(gndr.f,wt=anweight) %>%
+  mutate(total=sum(n),percentage=round(100*n/total,1))
+
+round(weighted.mean(exdat$gndr.c,w=exdat$anweight),2)
+round(sqrt(wtd.var(exdat$gndr.c,w=exdat$anweight)),2)
+```
+
+### Minority ethnic group status
+
+```{r}
+exdat %>%
+  count(minority,wt=anweight) %>%
+  mutate(total=sum(n),percentage=round(100*n/total,1))
+
+round(weighted.mean(exdat$minority.c,w=exdat$anweight),2)
+round(sqrt(wtd.var(exdat$minority.c,w=exdat$anweight)),2)
+```
+
+## Independent variables
+
+### lrgen
+
+```{r}
+
+round(weighted.mean(exdat$lrgen,w=exdat$anweight),2)
+round(sqrt(wtd.var(exdat$lrgen,w=exdat$anweight)),2)
+```
+
+### lrecon
+
+```{r}
+
+round(weighted.mean(exdat$lrecon,w=exdat$anweight),2)
+round(sqrt(wtd.var(exdat$lrecon,w=exdat$anweight)),2)
+```
+
+### galtan
+
+```{r}
+
+round(weighted.mean(exdat$galtan,w=exdat$anweight),2)
+round(sqrt(wtd.var(exdat$galtan,w=exdat$anweight)),2)
+```
+
+### galtan salience
+
+```{r}
+
+round(weighted.mean(exdat$galtan_salience,w=exdat$anweight),2)
+round(sqrt(wtd.var(exdat$galtan_salience,w=exdat$anweight)),2)
+```
+
+## Correlation table
+
+```{r}
+
+cor.vars<-c("gndr.c","age10.c","minority.c",
+            "lrgen.z.gmc","lrecon.z.gmc",
+            "galtan.z.gmc","galtan_salience.z.gmc",
+            "childlessness")
+
+weighted_corr <- 
+  cov.wt(exdat[,cor.vars],
+         wt = exdat[,"anweight"], cor = TRUE)
+
+corr_matrix <- weighted_corr$cor
+round(corr_matrix,2)
+
+
+export(corr_matrix,
+       "../../results/cors.weighted.pearson.r.xlsx",
+       overwrite=T)
+
+corr_matrix.t<-
+  (corr_matrix*sqrt(weighted_corr$n.obs-2))/sqrt(1-corr_matrix^2)
+
+## Warning in sqrt(1 - corr_matrix^2): NaNs produced
+
+corr_matrix.p<-
+  2*(1-pt(abs(corr_matrix.t),df=weighted_corr$n.obs-2))
+round(corr_matrix.p,3)
+
+export(corr_matrix.p,
+       "../../results/cors.weighted.pearson.r.p.xlsx",
+       overwrite=T)
 ```
 
 # RQ1 Analysis 
@@ -129,6 +286,17 @@ mod0<-
         family=binomial(link="logit"),weights = anweight)
 
 summary(mod0)
+
+export(rownames_to_column(
+  getFE_glmer(mod0,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod0.xlsx",
+       overwrite=T)
+
+export(getVC(mod0,round = 10),
+       "../../results/estimates/VC_mod0.xlsx",
+       overwrite=T)
+
+
 ```
 
 ## Covariates
@@ -140,6 +308,15 @@ mod1<-
         family=binomial(link="logit"),weights = anweight)
 
 summary(mod1)
+
+export(rownames_to_column(
+  getFE_glmer(mod1,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod1.xlsx",
+       overwrite=T)
+
+export(getVC(mod1,round = 10),
+       "../../results/estimates/VC_mod1.xlsx",
+       overwrite=T)
 ```
 
 ## lrgen
@@ -154,6 +331,15 @@ mod2.lrgen<-
         data=exdat,
         family=binomial(link="logit"),weights = anweight)
 summary(mod2.lrgen)
+
+export(rownames_to_column(
+  getFE_glmer(mod2.lrgen,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod2.lrgen.xlsx",
+       overwrite=T)
+
+export(getVC(mod2.lrgen,round = 10),
+       "../../results/estimates/VC_mod2.lrgen.xlsx",
+       overwrite=T)
 ```
 
 ### Random
@@ -165,10 +351,47 @@ mod3.lrgen<-
           (lrgen.z.gmc|cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod3.lrgen)
 
 anova(mod2.lrgen,mod3.lrgen)
+
+export(rownames_to_column(
+  getFE_glmer(mod3.lrgen,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod3.lrgen.xlsx",
+       overwrite=T)
+
+export(getVC(mod3.lrgen,round = 10),
+       "../../results/estimates/VC_mod3.lrgen.xlsx",
+       overwrite=T)
+```
+
+
+### Random without random effect correlation
+
+```{r}
+mod4.lrgen<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrgen.z.gmc+
+          (lrgen.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod4.lrgen)
+
+anova(mod2.lrgen,mod4.lrgen)
+anova(mod4.lrgen,mod3.lrgen)
+
+export(rownames_to_column(
+  getFE_glmer(mod4.lrgen,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod4.lrgen.xlsx",
+       overwrite=T)
+
+export(getVC(mod4.lrgen,round = 10),
+       "../../results/estimates/VC_mod4.lrgen.xlsx",
+       overwrite=T)
 ```
 
 
@@ -184,6 +407,15 @@ mod2.lrecon<-
         data=exdat,
         family=binomial(link="logit"),weights = anweight)
 summary(mod2.lrecon)
+
+export(rownames_to_column(
+  getFE_glmer(mod2.lrecon,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod2.lrecon.xlsx",
+       overwrite=T)
+
+export(getVC(mod2.lrecon,round = 10),
+       "../../results/estimates/VC_mod2.lrecon.xlsx",
+       overwrite=T)
 ```
 
 ### Random
@@ -195,11 +427,50 @@ mod3.lrecon<-
           (lrecon.z.gmc|cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod3.lrecon)
 
 anova(mod2.lrecon,mod3.lrecon)
+
+export(rownames_to_column(
+  getFE_glmer(mod3.lrecon,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod3.lrecon.xlsx",
+       overwrite=T)
+
+export(getVC(mod3.lrecon,round = 10),
+       "../../results/estimates/VC_mod3.lrecon.xlsx",
+       overwrite=T)
 ```
+
+
+### Random without random effect correlation
+
+```{r}
+mod4.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+
+          (lrecon.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod4.lrecon)
+
+anova(mod2.lrecon,mod4.lrecon)
+anova(mod4.lrecon,mod3.lrecon)
+
+export(rownames_to_column(
+  getFE_glmer(mod4.lrecon,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod4.lrecon.xlsx",
+       overwrite=T)
+
+export(getVC(mod4.lrecon,round = 10),
+       "../../results/estimates/VC_mod4.lrecon.xlsx",
+       overwrite=T)
+```
+
+
 
 
 
@@ -215,6 +486,15 @@ mod2.galtan<-
         data=exdat,
         family=binomial(link="logit"),weights = anweight)
 summary(mod2.galtan)
+
+export(rownames_to_column(
+  getFE_glmer(mod2.galtan,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod2.galtan.xlsx",
+       overwrite=T)
+
+export(getVC(mod2.galtan,round = 10),
+       "../../results/estimates/VC_mod2.galtan.xlsx",
+       overwrite=T)
 ```
 
 ### Random
@@ -226,11 +506,50 @@ mod3.galtan<-
           (galtan.z.gmc|cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod3.galtan)
 
 anova(mod2.galtan,mod3.galtan)
+
+export(rownames_to_column(
+  getFE_glmer(mod3.galtan,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod3.galtan.xlsx",
+       overwrite=T)
+
+export(getVC(mod3.galtan,round = 10),
+       "../../results/estimates/VC_mod3.galtan.xlsx",
+       overwrite=T)
 ```
+
+
+### Random without random effect correlation
+
+```{r}
+mod4.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+
+          (galtan.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod4.galtan)
+
+anova(mod2.galtan,mod4.galtan)
+anova(mod4.galtan,mod3.galtan)
+
+export(rownames_to_column(
+  getFE_glmer(mod4.galtan,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod4.galtan.xlsx",
+       overwrite=T)
+
+export(getVC(mod4.galtan,round = 10),
+       "../../results/estimates/VC_mod4.galtan.xlsx",
+       overwrite=T)
+```
+
+
 
 # RQ2 Analysis 
 
@@ -241,39 +560,109 @@ H2. We expect the association between childlessness and the GAL-TAN political id
 ## galtan salience fixed main effect
 
 ```{r}
-mod4.galtan<-
+mod5.galtan<-
   glmer(childlessness~gndr.c+age10.c+minority.c+
           galtan.z.gmc+galtan_salience.z.gmc+
-          (galtan.z.gmc||cntry),
+          (1|cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
         control = glmerControl(optimizer="bobyqa"))
-summary(mod4.galtan)
+summary(mod5.galtan)
+
+export(rownames_to_column(
+  getFE_glmer(mod5.galtan,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod5.galtan.xlsx",
+       overwrite=T)
+
+export(getVC(mod5.galtan,round = 10),
+       "../../results/estimates/VC_mod5.galtan.xlsx",
+       overwrite=T)
+```
+
+## galtan salience random main effect
+
+```{r}
+mod6.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          (galtan_salience.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod6.galtan)
+anova(mod5.galtan,mod6.galtan)
+
+export(rownames_to_column(
+  getFE_glmer(mod6.galtan,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod6.galtan.xlsx",
+       overwrite=T)
+
+export(getVC(mod6.galtan,round = 10),
+       "../../results/estimates/VC_mod6.galtan.xlsx",
+       overwrite=T)
+```
+
+## galtan salience random main effect without random effect correlation
+
+```{r}
+mod7.galtan<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          (galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa"))
+summary(mod7.galtan)
+anova(mod5.galtan,mod7.galtan)
+anova(mod7.galtan,mod6.galtan)
+
+export(rownames_to_column(
+  getFE_glmer(mod7.galtan,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod7.galtan.xlsx",
+       overwrite=T)
+
+export(getVC(mod7.galtan,round = 10),
+       "../../results/estimates/VC_mod7.galtan.xlsx",
+       overwrite=T)
 ```
 
 ## fixed interaction between galtan and galtan salience
 
 ```{r}
-mod5.galtan<-
+mod8.galtan<-
   glmer(childlessness~gndr.c+age10.c+minority.c+
           galtan.z.gmc+galtan_salience.z.gmc+
           galtan.z.gmc:galtan_salience.z.gmc+
-          (galtan.z.gmc||cntry),
+          (galtan_salience.z.gmc||cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
         control = glmerControl(optimizer="bobyqa",
                                optCtrl=list(maxfun=2e6)))
-summary(mod5.galtan)
+summary(mod8.galtan)
+
+export(rownames_to_column(
+  getFE_glmer(mod8.galtan,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod8.galtan.xlsx",
+       overwrite=T)
+
+export(getVC(mod8.galtan,round = 10),
+       "../../results/estimates/VC_mod8.galtan.xlsx",
+       overwrite=T)
+
 ```
 
 ### marginal effects
 
 ```{r}
-emtrends(mod5.galtan,
+emtrends(mod8.galtan,
          var="galtan.z.gmc",
          specs="galtan_salience.z.gmc",
          at=list(galtan_salience.z.gmc=c(-1,0,1)),
          infer=c(T,T))
+
+round(exp(c(0.12151,0.00645,0.2366)),2)
+round(exp(c(0.00607,-0.05188,0.0640)),2)
+round(exp(c(-0.10936,-0.17848,-0.0402)),2)
 
 ```
 
@@ -282,18 +671,29 @@ emtrends(mod5.galtan,
 ## random interaction between galtan and galtan salience
 
 ```{r}
-mod6.galtan<-
+mod9.galtan<-
   glmer(childlessness~gndr.c+age10.c+minority.c+
           galtan.z.gmc+galtan_salience.z.gmc+
           galtan.z.gmc:galtan_salience.z.gmc+
-          (galtan.z.gmc+galtan_salience.z.gmc+
+          (galtan_salience.z.gmc+
              galtan.z.gmc:galtan_salience.z.gmc||cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
         control = glmerControl(optimizer="bobyqa",
                                optCtrl=list(maxfun=2e6)))
-summary(mod6.galtan)
+summary(mod9.galtan)
+anova(mod8.galtan,mod9.galtan)
+
+export(rownames_to_column(
+  getFE_glmer(mod9.galtan,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod9.galtan.xlsx",
+       overwrite=T)
+
+export(getVC(mod9.galtan,round = 10),
+       "../../results/estimates/VC_mod9.galtan.xlsx",
+       overwrite=T)
 ```
+
 
 
 ### Plot
@@ -301,10 +701,10 @@ summary(mod6.galtan)
 ```{r}
 
 p<-
-  emmip(mod5.galtan, galtan_salience.z.gmc ~ galtan.z.gmc,
+  emmip(mod8.galtan, galtan_salience.z.gmc ~ galtan.z.gmc,
         at=list(galtan_salience.z.gmc = c(-1,0,1),
                 #minority.c = c(-0.5,0.5),
-                galtan.z.gmc=seq(from=-2,to=2,by=0.02)),
+                galtan.z.gmc=seq(from=-2,to=2,by=0.01)),
         plotit=F,CIs=TRUE,type="response")
 
 head(p)
@@ -313,28 +713,8 @@ head(p)
 #  ifelse(p$minority.c==(-0.5),
 #         "Ethnic majority","Ethnic minority")
 p$galtan_salience<-p$tvar
-levels(p$galtan_salience)
+levels(p$galtan_salience)<-c("Low Salience","Average Salience","High Salience")
 
-
-
-p2<-ggplot(p,aes(y=yvar,x=xvar,color=galtan_salience))+
-  geom_point()+
-  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
-  xlab("Left-Right Economic")+
-  ylab("P(Childlessness)")
-p2
-
-png(filename = 
-      "../../results/figures/galtan_galtan_salience.png",
-    units = "cm",
-    width = 20.0,height=10.0,res = 300)
-p2
-dev.off()
-```
-
-### Non-extrapolated plot
-
-```{r}
 
 min.low<-
   min(exdat[exdat$galtan_salience.z.gmc<=(-1),
@@ -386,21 +766,35 @@ table(p$filter.high)
 
 p.ex<-p[p$filter.low!=0 & p$filter.mid!=0 & p$filter.high!=0,]
 
+met.brewer("Archambault")
+met.brewer("Archambault")[c(1,3,2)]
 
 p1<-ggplot(p.ex,aes(y=yvar,x=xvar,color=galtan_salience))+
-  geom_point()+
+  geom_point(size=3)+
   geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
-  xlab("Left-Right Economic")+
-  ylab("P(Childlessness)")
+  xlab("GAL-TAN")+
+  ylab("P(Childlessness)")+
+  scale_color_manual(values=met.brewer("Archambault")[c(1,3,2)])+
+  facet_wrap(~galtan_salience,ncol=3)+
+  theme(legend.position = "none",
+        text=element_text(size=16,  family="sans"),
+        panel.background = element_rect(fill = "white",
+                                        #colour = "black",
+                                        #size = 0.5, linetype = "solid"
+                                        ),
+        panel.grid.major.x = element_line(size = 0.5, linetype = 2,
+                                        colour = "black"))
 p1
 
 png(filename = 
       "../../results/figures/galtan_galtan_salience_nonextrp.png",
     units = "cm",
-    width = 20.0,height=10.0,res = 300)
+    width = 29.7,height=21.0,res = 600)
 p1
 dev.off()
+
 ```
+
 
 ### marginal effects
 

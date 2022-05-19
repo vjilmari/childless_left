@@ -376,32 +376,66 @@ pre code {
 <li><a href="#data">Data</a></li>
 <li><a href="#data-exclusions">Data exclusions</a></li>
 <li><a href="#variable-centering">Variable centering</a></li>
+<li><a href="#variable-scaling">Variable scaling</a></li>
 </ul></li>
-<li><a href="#descriptives">Descriptives</a></li>
+<li><a href="#descriptive-statistics">Descriptive statistics</a>
+<ul>
+<li><a href="#sample">Sample</a></li>
+<li><a href="#childlessness">Childlessness</a>
+<ul>
+<li><a href="#unweighted">Unweighted</a></li>
+<li><a href="#weighted">Weighted</a></li>
+</ul></li>
+<li><a href="#covariates">Covariates</a>
+<ul>
+<li><a href="#age">Age</a></li>
+<li><a href="#gender">Gender</a></li>
+<li><a href="#minority-ethnic-group-status">Minority ethnic group
+status</a></li>
+</ul></li>
+<li><a href="#independent-variables">Independent variables</a>
+<ul>
+<li><a href="#lrgen">lrgen</a></li>
+<li><a href="#lrecon">lrecon</a></li>
+<li><a href="#galtan">galtan</a></li>
+<li><a href="#galtan-salience">galtan salience</a></li>
+</ul></li>
+<li><a href="#correlation-table">Correlation table</a></li>
+</ul></li>
 <li><a href="#rq1-analysis">RQ1 Analysis</a>
 <ul>
 <li><a href="#baserate-only">Baserate only</a></li>
-<li><a href="#covariates">Covariates</a></li>
-<li><a href="#lrgen">lrgen</a>
+<li><a href="#covariates-1">Covariates</a></li>
+<li><a href="#lrgen-1">lrgen</a>
 <ul>
 <li><a href="#fixed">Fixed</a></li>
 <li><a href="#random">Random</a></li>
+<li><a href="#random-without-random-effect-correlation">Random without
+random effect correlation</a></li>
 </ul></li>
-<li><a href="#lrecon">lrecon</a>
+<li><a href="#lrecon-1">lrecon</a>
 <ul>
 <li><a href="#fixed-1">Fixed</a></li>
 <li><a href="#random-1">Random</a></li>
+<li><a href="#random-without-random-effect-correlation-1">Random without
+random effect correlation</a></li>
 </ul></li>
-<li><a href="#galtan">galtan</a>
+<li><a href="#galtan-1">galtan</a>
 <ul>
 <li><a href="#fixed-2">Fixed</a></li>
 <li><a href="#random-2">Random</a></li>
+<li><a href="#random-without-random-effect-correlation-2">Random without
+random effect correlation</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#rq2-analysis">RQ2 Analysis</a>
 <ul>
 <li><a href="#galtan-salience-fixed-main-effect">galtan salience fixed
 main effect</a></li>
+<li><a href="#galtan-salience-random-main-effect">galtan salience random
+main effect</a></li>
+<li><a href="#galtan-salience-random-main-effect-without-random-effect-correlation">galtan
+salience random main effect without random effect correlation</a></li>
 <li><a href="#fixed-interaction-between-galtan-and-galtan-salience">fixed
 interaction between galtan and galtan salience</a>
 <ul>
@@ -410,6 +444,7 @@ interaction between galtan and galtan salience</a>
 <li><a href="#random-interaction-between-galtan-and-galtan-salience">random
 interaction between galtan and galtan salience</a>
 <ul>
+<li><a href="#plot">Plot</a></li>
 <li><a href="#marginal-effects-1">marginal effects</a></li>
 </ul></li>
 </ul></li>
@@ -426,6 +461,11 @@ interaction between lrecon and lrecon salience</a>
 interaction between lrecon and lrecon salience</a>
 <ul>
 <li><a href="#marginal-effects-3">marginal effects</a></li>
+</ul></li>
+<li><a href="#exclude-all-random-slopes">exclude all random slopes</a>
+<ul>
+<li><a href="#plot-1">Plot</a></li>
+<li><a href="#non-extrapolated-plot">Non-extrapolated plot</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#erq2-analysis">ERQ2 Analysis</a>
@@ -521,6 +561,7 @@ interaction between lrecon and lrecon salience</a>
 </ul>
 </div>
 
+<p>From: <a href="https://osf.io/er4v5" class="uri">https://osf.io/er4v5</a></p>
 <p>RQ1. Is childlessness associated with the three Chapel Hill rated
 political ideology (Left-Right, Economic Left-Right, GAL-TAN) positions
 of the party for which one has voted?</p>
@@ -567,12 +608,26 @@ library(rio)</code></pre>
 <pre><code>## The following objects are masked from &#39;package:base&#39;:
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(vjihelpers)</code></pre>
+<pre class="r"><code>library(vjihelpers)
+library(ggplot2)
+library(MetBrewer)
+library(tibble)
+library(Hmisc)</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## Loading required package: survival</code></pre>
+<pre><code>## Loading required package: Formula</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Hmisc&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
+## 
+##     src, summarize</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     format.pval, units</code></pre>
 </div>
 <div id="custom-functions" class="section level2">
 <h2>Custom functions</h2>
-<pre class="r"><code>source(&quot;../custom_functions.R&quot;)
-source(&quot;../modglmer_logit.R&quot;)</code></pre>
+<pre class="r"><code>source(&quot;../custom_functions.R&quot;)</code></pre>
 </div>
 <div id="data" class="section level2">
 <h2>Data</h2>
@@ -580,57 +635,13 @@ source(&quot;../modglmer_logit.R&quot;)</code></pre>
 </div>
 <div id="data-exclusions" class="section level2">
 <h2>Data exclusions</h2>
-<pre class="r"><code>names(fdat)</code></pre>
-<pre><code>##  [1] &quot;idno&quot;                     &quot;cntry&quot;                   
-##  [3] &quot;dweight&quot;                  &quot;pspwght&quot;                 
-##  [5] &quot;pweight&quot;                  &quot;pt.nmbr&quot;                 
-##  [7] &quot;pt.name&quot;                  &quot;gndr.f&quot;                  
-##  [9] &quot;gndr.c&quot;                   &quot;agea&quot;                    
-## [11] &quot;age10.c&quot;                  &quot;income&quot;                  
-## [13] &quot;income.f&quot;                 &quot;income.fr&quot;               
-## [15] &quot;edu&quot;                      &quot;edu.f&quot;                   
-## [17] &quot;edu.c&quot;                    &quot;vote&quot;                    
-## [19] &quot;vote.c&quot;                   &quot;con&quot;                     
-## [21] &quot;con.c&quot;                    &quot;tra&quot;                     
-## [23] &quot;tra.c&quot;                    &quot;ben&quot;                     
-## [25] &quot;ben.c&quot;                    &quot;uni&quot;                     
-## [27] &quot;uni.c&quot;                    &quot;sdi&quot;                     
-## [29] &quot;sdi.c&quot;                    &quot;sti&quot;                     
-## [31] &quot;sti.c&quot;                    &quot;hed&quot;                     
-## [33] &quot;hed.c&quot;                    &quot;ach&quot;                     
-## [35] &quot;ach.c&quot;                    &quot;pow&quot;                     
-## [37] &quot;pow.c&quot;                    &quot;sec&quot;                     
-## [39] &quot;sec.c&quot;                    &quot;resp.style&quot;              
-## [41] &quot;lrgen&quot;                    &quot;lrecon&quot;                  
-## [43] &quot;galtan&quot;                   &quot;spendvtax&quot;               
-## [45] &quot;deregulation&quot;             &quot;redistribution&quot;          
-## [47] &quot;econ_interven&quot;            &quot;civlib_laworder&quot;         
-## [49] &quot;sociallifestyle&quot;          &quot;religious_principle&quot;     
-## [51] &quot;immigrate_policy&quot;         &quot;multiculturalism&quot;        
-## [53] &quot;urban_rural&quot;              &quot;environment&quot;             
-## [55] &quot;regions&quot;                  &quot;international_security&quot;  
-## [57] &quot;ethnic_minorities&quot;        &quot;nationalism&quot;             
-## [59] &quot;lrecon_salience&quot;          &quot;galtan_salience&quot;         
-## [61] &quot;antielite_salience&quot;       &quot;corrupt_salience&quot;        
-## [63] &quot;lrgen.z&quot;                  &quot;lrecon.z&quot;                
-## [65] &quot;galtan.z&quot;                 &quot;spendvtax.z&quot;             
-## [67] &quot;deregulation.z&quot;           &quot;redistribution.z&quot;        
-## [69] &quot;econ_interven.z&quot;          &quot;civlib_laworder.z&quot;       
-## [71] &quot;sociallifestyle.z&quot;        &quot;religious_principle.z&quot;   
-## [73] &quot;immigrate_policy.z&quot;       &quot;multiculturalism.z&quot;      
-## [75] &quot;urban_rural.z&quot;            &quot;environment.z&quot;           
-## [77] &quot;regions.z&quot;                &quot;international_security.z&quot;
-## [79] &quot;ethnic_minorities.z&quot;      &quot;nationalism.z&quot;           
-## [81] &quot;lrecon_salience.z&quot;        &quot;galtan_salience.z&quot;       
-## [83] &quot;antielite_salience.z&quot;     &quot;corrupt_salience.z&quot;      
-## [85] &quot;childlessness&quot;            &quot;minority&quot;                
-## [87] &quot;minority.c&quot;               &quot;anweight&quot;</code></pre>
 <pre class="r"><code>exdat&lt;-fdat %&gt;%
   dplyr::select(childlessness,
-                gndr.c,age10.c,
-                minority.c,lrgen.z,
-                lrecon.z,galtan.z,
-                lrecon_salience.z,galtan_salience.z,
+                gndr.f,agea,minority,
+                gndr.c,age10.c,minority.c,
+                lrgen,
+                lrecon,galtan,
+                lrecon_salience,galtan_salience,
                 cntry,anweight) %&gt;%
   na.omit()</code></pre>
 </div>
@@ -639,13 +650,69 @@ source(&quot;../modglmer_logit.R&quot;)</code></pre>
 <pre class="r"><code>exdat&lt;-
   group_mean_center(
     data=exdat,group.var=&quot;cntry&quot;,
-    vars=c(&quot;lrgen.z&quot;,&quot;lrecon.z&quot;,&quot;galtan.z&quot;,
-           &quot;lrecon_salience.z&quot;,&quot;galtan_salience.z&quot;),
+    vars=c(&quot;lrgen&quot;,&quot;lrecon&quot;,&quot;galtan&quot;,
+           &quot;lrecon_salience&quot;,&quot;galtan_salience&quot;),
     grand.init = F)</code></pre>
 </div>
+<div id="variable-scaling" class="section level2">
+<h2>Variable scaling</h2>
+<pre class="r"><code>CHES&lt;-
+  import(&quot;../../data/raw/2014_CHES_dataset_means.csv&quot;)
+
+(sd.lrgen&lt;-sd(CHES$lrgen,na.rm=T))</code></pre>
+<pre><code>## [1] 2.302111</code></pre>
+<pre class="r"><code>(sd.lrecon&lt;-sd(CHES$lrecon,na.rm=T))</code></pre>
+<pre><code>## [1] 2.210724</code></pre>
+<pre class="r"><code>(sd.galtan&lt;-sd(CHES$galtan,na.rm=T))</code></pre>
+<pre><code>## [1] 2.627548</code></pre>
+<pre class="r"><code>(sd.galtan_salience&lt;-sd(CHES$galtan_salience,na.rm=T))</code></pre>
+<pre><code>## [1] 1.551972</code></pre>
+<pre class="r"><code>(sd.lrecon_salience&lt;-sd(CHES$lrecon_salience,na.rm=T))</code></pre>
+<pre><code>## [1] 1.468366</code></pre>
+<pre class="r"><code>exdat$lrgen.z.gmc&lt;-exdat$lrgen.gmc/sd.lrgen
+exdat$lrecon.z.gmc&lt;-exdat$lrecon.gmc/sd.lrecon
+exdat$galtan.z.gmc&lt;-exdat$galtan.gmc/sd.galtan
+exdat$galtan_salience.z.gmc&lt;-
+  exdat$galtan_salience.gmc/sd.galtan_salience
+exdat$lrecon_salience.z.gmc&lt;-
+  exdat$lrecon_salience.gmc/sd.lrecon_salience</code></pre>
 </div>
-<div id="descriptives" class="section level1">
-<h1>Descriptives</h1>
+</div>
+<div id="descriptive-statistics" class="section level1">
+<h1>Descriptive statistics</h1>
+<div id="sample" class="section level2">
+<h2>Sample</h2>
+<pre class="r"><code># n countries
+length(unique(exdat$cntry))</code></pre>
+<pre><code>## [1] 20</code></pre>
+<pre class="r"><code># n initial observations
+nrow(fdat[fdat$cntry!=&quot;IL&quot;,])</code></pre>
+<pre><code>## [1] 37623</code></pre>
+<pre class="r"><code># n who reported voting
+table(fdat[fdat$cntry!=&quot;IL&quot;,&quot;vote&quot;],useNA=&quot;always&quot;)</code></pre>
+<pre><code>## 
+##     1     2     3  &lt;NA&gt; 
+## 25738  8187  3394   304</code></pre>
+<pre class="r"><code># n for whom CHES was available
+
+table(rowSums(is.na(fdat[fdat$cntry!=&quot;IL&quot;,
+                   c(&quot;galtan&quot;,&quot;lrgen&quot;,&quot;lrecon&quot;)])),
+              useNA=&quot;always&quot;)</code></pre>
+<pre><code>## 
+##     0     3  &lt;NA&gt; 
+## 21684 15939     0</code></pre>
+<pre class="r"><code>21684/37623</code></pre>
+<pre><code>## [1] 0.5763496</code></pre>
+<pre class="r"><code>21684-21374</code></pre>
+<pre><code>## [1] 310</code></pre>
+<pre class="r"><code>#range between countries
+range(table(exdat$cntry))</code></pre>
+<pre><code>## [1]  541 2043</code></pre>
+</div>
+<div id="childlessness" class="section level2">
+<h2>Childlessness</h2>
+<div id="unweighted" class="section level3">
+<h3>Unweighted</h3>
 <pre class="r"><code>table(exdat$cntry,exdat$childlessness)</code></pre>
 <pre><code>##     
 ##         0    1
@@ -698,6 +765,185 @@ source(&quot;../modglmer_logit.R&quot;)</code></pre>
 ##         0         1 
 ## 0.7473566 0.2526434</code></pre>
 </div>
+<div id="weighted" class="section level3">
+<h3>Weighted</h3>
+<pre class="r"><code>exdat %&gt;%
+  group_by(cntry) %&gt;%
+  count(childlessness,wt=anweight) %&gt;%
+  ungroup() %&gt;%
+  group_by(cntry) %&gt;%
+  mutate(total=sum(n),percentage=round(100*n/total,1)) %&gt;%
+  filter(childlessness==1) %&gt;%
+  dplyr::select(cntry,percentage)</code></pre>
+<pre><code>## # A tibble: 20 × 2
+## # Groups:   cntry [20]
+##    cntry percentage
+##    &lt;chr&gt;      &lt;dbl&gt;
+##  1 AT          38.8
+##  2 BE          28  
+##  3 CH          33.7
+##  4 CZ          21.3
+##  5 DE          32  
+##  6 DK          22.1
+##  7 EE          19.2
+##  8 ES          29.4
+##  9 FI          28.5
+## 10 FR          13.2
+## 11 GB          23.6
+## 12 HU          30  
+## 13 IE          28  
+## 14 LT          11.8
+## 15 NL          25.4
+## 16 NO          24.1
+## 17 PL          20.4
+## 18 PT          21.4
+## 19 SE          28.1
+## 20 SI          22.2</code></pre>
+<pre class="r"><code>exdat %&gt;%
+  count(childlessness,wt=anweight) %&gt;%
+  mutate(total=sum(n),percentage=round(100*n/total,1))</code></pre>
+<pre><code>##   childlessness         n    total percentage
+## 1             0 13960.839 18758.81       74.4
+## 2             1  4797.975 18758.81       25.6</code></pre>
+<pre class="r"><code>round(weighted.mean(exdat$childlessness,w=exdat$anweight),2)</code></pre>
+<pre><code>## [1] 0.26</code></pre>
+<pre class="r"><code>round(sqrt(wtd.var(exdat$childlessness,w=exdat$anweight)),2)</code></pre>
+<pre><code>## [1] 0.44</code></pre>
+</div>
+</div>
+<div id="covariates" class="section level2">
+<h2>Covariates</h2>
+<div id="age" class="section level3">
+<h3>Age</h3>
+<pre class="r"><code>round(weighted.mean(exdat$agea,w=exdat$anweight),2)</code></pre>
+<pre><code>## [1] 52.52</code></pre>
+<pre class="r"><code>round(sqrt(wtd.var(exdat$agea,w=exdat$anweight)),2)</code></pre>
+<pre><code>## [1] 17.13</code></pre>
+</div>
+<div id="gender" class="section level3">
+<h3>Gender</h3>
+<pre class="r"><code>exdat %&gt;%
+  count(gndr.f,wt=anweight) %&gt;%
+  mutate(total=sum(n),percentage=round(100*n/total,1))</code></pre>
+<pre><code>##   gndr.f        n    total percentage
+## 1 Female 9436.640 18758.81       50.3
+## 2   Male 9322.174 18758.81       49.7</code></pre>
+<pre class="r"><code>round(weighted.mean(exdat$gndr.c,w=exdat$anweight),2)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>round(sqrt(wtd.var(exdat$gndr.c,w=exdat$anweight)),2)</code></pre>
+<pre><code>## [1] 0.5</code></pre>
+</div>
+<div id="minority-ethnic-group-status" class="section level3">
+<h3>Minority ethnic group status</h3>
+<pre class="r"><code>exdat %&gt;%
+  count(minority,wt=anweight) %&gt;%
+  mutate(total=sum(n),percentage=round(100*n/total,1))</code></pre>
+<pre><code>##   minority          n    total percentage
+## 1        0 18096.2317 18758.81       96.5
+## 2        1   662.5816 18758.81        3.5</code></pre>
+<pre class="r"><code>round(weighted.mean(exdat$minority.c,w=exdat$anweight),2)</code></pre>
+<pre><code>## [1] -0.46</code></pre>
+<pre class="r"><code>round(sqrt(wtd.var(exdat$minority.c,w=exdat$anweight)),2)</code></pre>
+<pre><code>## [1] 0.18</code></pre>
+</div>
+</div>
+<div id="independent-variables" class="section level2">
+<h2>Independent variables</h2>
+<div id="lrgen" class="section level3">
+<h3>lrgen</h3>
+<pre class="r"><code>round(weighted.mean(exdat$lrgen,w=exdat$anweight),2)</code></pre>
+<pre><code>## [1] 5.47</code></pre>
+<pre class="r"><code>round(sqrt(wtd.var(exdat$lrgen,w=exdat$anweight)),2)</code></pre>
+<pre><code>## [1] 2.05</code></pre>
+</div>
+<div id="lrecon" class="section level3">
+<h3>lrecon</h3>
+<pre class="r"><code>round(weighted.mean(exdat$lrecon,w=exdat$anweight),2)</code></pre>
+<pre><code>## [1] 5.19</code></pre>
+<pre class="r"><code>round(sqrt(wtd.var(exdat$lrecon,w=exdat$anweight)),2)</code></pre>
+<pre><code>## [1] 1.99</code></pre>
+</div>
+<div id="galtan" class="section level3">
+<h3>galtan</h3>
+<pre class="r"><code>round(weighted.mean(exdat$galtan,w=exdat$anweight),2)</code></pre>
+<pre><code>## [1] 5.1</code></pre>
+<pre class="r"><code>round(sqrt(wtd.var(exdat$galtan,w=exdat$anweight)),2)</code></pre>
+<pre><code>## [1] 2.24</code></pre>
+</div>
+<div id="galtan-salience" class="section level3">
+<h3>galtan salience</h3>
+<pre class="r"><code>round(weighted.mean(exdat$galtan_salience,w=exdat$anweight),2)</code></pre>
+<pre><code>## [1] 5.77</code></pre>
+<pre class="r"><code>round(sqrt(wtd.var(exdat$galtan_salience,w=exdat$anweight)),2)</code></pre>
+<pre><code>## [1] 1.36</code></pre>
+</div>
+</div>
+<div id="correlation-table" class="section level2">
+<h2>Correlation table</h2>
+<pre class="r"><code>cor.vars&lt;-c(&quot;gndr.c&quot;,&quot;age10.c&quot;,&quot;minority.c&quot;,
+            &quot;lrgen.z.gmc&quot;,&quot;lrecon.z.gmc&quot;,
+            &quot;galtan.z.gmc&quot;,&quot;galtan_salience.z.gmc&quot;,
+            &quot;childlessness&quot;)
+
+weighted_corr &lt;- 
+  cov.wt(exdat[,cor.vars],
+         wt = exdat[,&quot;anweight&quot;], cor = TRUE)
+
+corr_matrix &lt;- weighted_corr$cor
+round(corr_matrix,2)</code></pre>
+<pre><code>##                       gndr.c age10.c minority.c lrgen.z.gmc lrecon.z.gmc
+## gndr.c                  1.00    0.04      -0.01       -0.03        -0.02
+## age10.c                 0.04    1.00      -0.08        0.03         0.04
+## minority.c             -0.01   -0.08       1.00       -0.07        -0.07
+## lrgen.z.gmc            -0.03    0.03      -0.07        1.00         0.84
+## lrecon.z.gmc           -0.02    0.04      -0.07        0.84         1.00
+## galtan.z.gmc           -0.03    0.09      -0.05        0.82         0.57
+## galtan_salience.z.gmc   0.00   -0.06      -0.04        0.23        -0.01
+## childlessness          -0.07   -0.36       0.01       -0.01        -0.02
+##                       galtan.z.gmc galtan_salience.z.gmc childlessness
+## gndr.c                       -0.03                  0.00         -0.07
+## age10.c                       0.09                 -0.06         -0.36
+## minority.c                   -0.05                 -0.04          0.01
+## lrgen.z.gmc                   0.82                  0.23         -0.01
+## lrecon.z.gmc                  0.57                 -0.01         -0.02
+## galtan.z.gmc                  1.00                  0.18         -0.04
+## galtan_salience.z.gmc         0.18                  1.00          0.04
+## childlessness                -0.04                  0.04          1.00</code></pre>
+<pre class="r"><code>export(corr_matrix,
+       &quot;../../results/cors.weighted.pearson.r.xlsx&quot;,
+       overwrite=T)
+
+corr_matrix.t&lt;-
+  (corr_matrix*sqrt(weighted_corr$n.obs-2))/sqrt(1-corr_matrix^2)</code></pre>
+<pre><code>## Warning in sqrt(1 - corr_matrix^2): NaNs produced</code></pre>
+<pre class="r"><code>## Warning in sqrt(1 - corr_matrix^2): NaNs produced
+
+corr_matrix.p&lt;-
+  2*(1-pt(abs(corr_matrix.t),df=weighted_corr$n.obs-2))
+round(corr_matrix.p,3)</code></pre>
+<pre><code>##                       gndr.c age10.c minority.c lrgen.z.gmc lrecon.z.gmc
+## gndr.c                 0.000       0      0.294        0.00        0.000
+## age10.c                0.000     NaN      0.000        0.00        0.000
+## minority.c             0.294       0      0.000        0.00        0.000
+## lrgen.z.gmc            0.000       0      0.000         NaN        0.000
+## lrecon.z.gmc           0.000       0      0.000        0.00        0.000
+## galtan.z.gmc           0.000       0      0.000        0.00        0.000
+## galtan_salience.z.gmc  0.667       0      0.000        0.00        0.032
+## childlessness          0.000       0      0.293        0.04        0.009
+##                       galtan.z.gmc galtan_salience.z.gmc childlessness
+## gndr.c                           0                 0.667         0.000
+## age10.c                          0                 0.000         0.000
+## minority.c                       0                 0.000         0.293
+## lrgen.z.gmc                      0                 0.000         0.040
+## lrecon.z.gmc                     0                 0.032         0.009
+## galtan.z.gmc                     0                 0.000         0.000
+## galtan_salience.z.gmc            0                 0.000         0.000
+## childlessness                    0                 0.000         0.000</code></pre>
+<pre class="r"><code>export(corr_matrix.p,
+       &quot;../../results/cors.weighted.pearson.r.p.xlsx&quot;,
+       overwrite=T)</code></pre>
+</div>
+</div>
 <div id="rq1-analysis" class="section level1">
 <h1>RQ1 Analysis</h1>
 <p>RQ1. Is childlessness associated with the three Chapel Hill rated
@@ -738,8 +984,16 @@ closer to the GAL pole of the dimension.</p>
 ## (Intercept) -1.07113    0.08228  -13.02   &lt;2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod0,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod0.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod0,round = 10),
+       &quot;../../results/estimates/VC_mod0.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
-<div id="covariates" class="section level2">
+<div id="covariates-1" class="section level2">
 <h2>Covariates</h2>
 <pre class="r"><code>mod1&lt;-
   glmer(childlessness~gndr.c+age10.c+minority.c+(1|cntry),
@@ -781,8 +1035,16 @@ closer to the GAL pole of the dimension.</p>
 ## gndr.c     0.015               
 ## age10.c    0.106  0.010        
 ## minority.c 0.489  0.002  0.093</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod1,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod1.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod1,round = 10),
+       &quot;../../results/estimates/VC_mod1.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
-<div id="lrgen" class="section level2">
+<div id="lrgen-1" class="section level2">
 <h2>lrgen</h2>
 <div id="fixed" class="section level3">
 <h3>Fixed</h3>
@@ -831,6 +1093,14 @@ closer to the GAL pole of the dimension.</p>
 ## age10.c      0.106  0.009              
 ## minority.c   0.490  0.003  0.091       
 ## lrgen.z.gmc  0.038  0.020 -0.018  0.078</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod2.lrgen,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod2.lrgen.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod2.lrgen,round = 10),
+       &quot;../../results/estimates/VC_mod2.lrgen.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
 <div id="random" class="section level3">
 <h3>Random</h3>
@@ -840,7 +1110,8 @@ closer to the GAL pole of the dimension.</p>
           (lrgen.z.gmc|cntry),
         data=exdat,
         family=binomial(link=&quot;logit&quot;),weights = anweight,
-        control = glmerControl(optimizer=&quot;bobyqa&quot;))</code></pre>
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
 <pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
 ## glm!</code></pre>
 <pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
@@ -852,7 +1123,7 @@ closer to the GAL pole of the dimension.</p>
 ##     (lrgen.z.gmc | cntry)
 ##    Data: exdat
 ## Weights: anweight
-## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
 ## 
 ##      AIC      BIC   logLik deviance df.resid 
 ##  15077.8  15141.5  -7530.9  15061.8    21366 
@@ -863,17 +1134,17 @@ closer to the GAL pole of the dimension.</p>
 ## 
 ## Random effects:
 ##  Groups Name        Variance  Std.Dev. Corr 
-##  cntry  (Intercept) 0.1151087 0.33928       
-##         lrgen.z.gmc 0.0001529 0.01237  -1.00
+##  cntry  (Intercept) 0.1151096 0.33928       
+##         lrgen.z.gmc 0.0001529 0.01236  -1.00
 ## Number of obs: 21374, groups:  cntry, 20
 ## 
 ## Fixed effects:
 ##             Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept) -1.28748    0.09983 -12.896  &lt; 2e-16 ***
+## (Intercept) -1.28748    0.09984 -12.896  &lt; 2e-16 ***
 ## gndr.c      -0.30926    0.04047  -7.642 2.14e-14 ***
 ## age10.c     -0.55458    0.01346 -41.197  &lt; 2e-16 ***
-## minority.c  -0.28414    0.10425  -2.726  0.00642 ** 
-## lrgen.z.gmc -0.00907    0.02378  -0.381  0.70294    
+## minority.c  -0.28414    0.10425  -2.725  0.00642 ** 
+## lrgen.z.gmc -0.00907    0.02378  -0.381  0.70295    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
@@ -893,9 +1164,96 @@ closer to the GAL pole of the dimension.</p>
 ##            npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
 ## mod2.lrgen    6 15074 15122 -7531.1    15062                     
 ## mod3.lrgen    8 15078 15142 -7530.9    15062 0.3852  2     0.8248</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod3.lrgen,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod3.lrgen.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod3.lrgen,round = 10),
+       &quot;../../results/estimates/VC_mod3.lrgen.xlsx&quot;,
+       overwrite=T)</code></pre>
+</div>
+<div id="random-without-random-effect-correlation" class="section level3">
+<h3>Random without random effect correlation</h3>
+<pre class="r"><code>mod4.lrgen&lt;-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrgen.z.gmc+
+          (lrgen.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link=&quot;logit&quot;),weights = anweight,
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
+<pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
+## glm!</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>summary(mod4.lrgen)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: childlessness ~ gndr.c + age10.c + minority.c + lrgen.z.gmc +  
+##     (lrgen.z.gmc || cntry)
+##    Data: exdat
+## Weights: anweight
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##  15076.2  15131.9  -7531.1  15062.2    21367 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.7200 -0.4387 -0.2245  0.2403 12.9067 
+## 
+## Random effects:
+##  Groups  Name        Variance Std.Dev.
+##  cntry   (Intercept) 0.1158   0.3404  
+##  cntry.1 lrgen.z.gmc 0.0000   0.0000  
+## Number of obs: 21374, groups:  cntry, 20
+## 
+## Fixed effects:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -1.28810    0.10002 -12.878  &lt; 2e-16 ***
+## gndr.c      -0.30981    0.04046  -7.657  1.9e-14 ***
+## age10.c     -0.55477    0.01346 -41.215  &lt; 2e-16 ***
+## minority.c  -0.28372    0.10419  -2.723  0.00647 ** 
+## lrgen.z.gmc -0.01075    0.02345  -0.458  0.64673    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) gndr.c ag10.c mnrty.
+## gndr.c       0.016                     
+## age10.c      0.106  0.009              
+## minority.c   0.490  0.003  0.091       
+## lrgen.z.gmc  0.038  0.020 -0.018  0.078
+## optimizer (bobyqa) convergence code: 0 (OK)
+## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>anova(mod2.lrgen,mod4.lrgen)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod2.lrgen: childlessness ~ gndr.c + age10.c + minority.c + lrgen.z.gmc + (1 | cntry)
+## mod4.lrgen: childlessness ~ gndr.c + age10.c + minority.c + lrgen.z.gmc + (lrgen.z.gmc || cntry)
+##            npar   AIC   BIC  logLik deviance Chisq Df Pr(&gt;Chisq)
+## mod2.lrgen    6 15074 15122 -7531.1    15062                    
+## mod4.lrgen    7 15076 15132 -7531.1    15062     0  1     0.9999</code></pre>
+<pre class="r"><code>anova(mod4.lrgen,mod3.lrgen)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod4.lrgen: childlessness ~ gndr.c + age10.c + minority.c + lrgen.z.gmc + (lrgen.z.gmc || cntry)
+## mod3.lrgen: childlessness ~ gndr.c + age10.c + minority.c + lrgen.z.gmc + (lrgen.z.gmc | cntry)
+##            npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## mod4.lrgen    7 15076 15132 -7531.1    15062                     
+## mod3.lrgen    8 15078 15142 -7530.9    15062 0.3852  1     0.5348</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod4.lrgen,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod4.lrgen.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod4.lrgen,round = 10),
+       &quot;../../results/estimates/VC_mod4.lrgen.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
 </div>
-<div id="lrecon" class="section level2">
+<div id="lrecon-1" class="section level2">
 <h2>lrecon</h2>
 <div id="fixed-1" class="section level3">
 <h3>Fixed</h3>
@@ -930,10 +1288,10 @@ closer to the GAL pole of the dimension.</p>
 ## 
 ## Fixed effects:
 ##              Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)  -1.28878    0.10002 -12.886  &lt; 2e-16 ***
+## (Intercept)  -1.28878    0.10002 -12.885  &lt; 2e-16 ***
 ## gndr.c       -0.30994    0.04046  -7.661 1.85e-14 ***
 ## age10.c      -0.55466    0.01346 -41.200  &lt; 2e-16 ***
-## minority.c   -0.28506    0.10420  -2.736  0.00622 ** 
+## minority.c   -0.28506    0.10419  -2.736  0.00622 ** 
 ## lrecon.z.gmc -0.01474    0.02332  -0.632  0.52736    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
@@ -944,6 +1302,14 @@ closer to the GAL pole of the dimension.</p>
 ## age10.c      0.105  0.009              
 ## minority.c   0.490  0.003  0.090       
 ## lrecn.z.gmc  0.039  0.020 -0.025  0.077</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod2.lrecon,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod2.lrecon.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod2.lrecon,round = 10),
+       &quot;../../results/estimates/VC_mod2.lrecon.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
 <div id="random-1" class="section level3">
 <h3>Random</h3>
@@ -953,7 +1319,8 @@ closer to the GAL pole of the dimension.</p>
           (lrecon.z.gmc|cntry),
         data=exdat,
         family=binomial(link=&quot;logit&quot;),weights = anweight,
-        control = glmerControl(optimizer=&quot;bobyqa&quot;))</code></pre>
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
 <pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
 ## glm!</code></pre>
 <pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
@@ -965,7 +1332,7 @@ closer to the GAL pole of the dimension.</p>
 ##     (lrecon.z.gmc | cntry)
 ##    Data: exdat
 ## Weights: anweight
-## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
 ## 
 ##      AIC      BIC   logLik deviance df.resid 
 ##  15074.4  15138.2  -7529.2  15058.4    21366 
@@ -976,17 +1343,17 @@ closer to the GAL pole of the dimension.</p>
 ## 
 ## Random effects:
 ##  Groups Name         Variance Std.Dev. Corr 
-##  cntry  (Intercept)  0.113285 0.33658       
+##  cntry  (Intercept)  0.113286 0.33658       
 ##         lrecon.z.gmc 0.001825 0.04272  -1.00
 ## Number of obs: 21374, groups:  cntry, 20
 ## 
 ## Fixed effects:
 ##               Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)  -1.283323   0.099331 -12.920  &lt; 2e-16 ***
-## gndr.c       -0.308098   0.040478  -7.612 2.71e-14 ***
+## (Intercept)  -1.283323   0.099335 -12.919  &lt; 2e-16 ***
+## gndr.c       -0.308097   0.040478  -7.612 2.71e-14 ***
 ## age10.c      -0.553815   0.013465 -41.131  &lt; 2e-16 ***
-## minority.c   -0.284343   0.104371  -2.724  0.00644 ** 
-## lrecon.z.gmc -0.006025   0.025959  -0.232  0.81646    
+## minority.c   -0.284340   0.104376  -2.724  0.00645 ** 
+## lrecon.z.gmc -0.006025   0.025959  -0.232  0.81647    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
@@ -1006,9 +1373,98 @@ closer to the GAL pole of the dimension.</p>
 ##             npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
 ## mod2.lrecon    6 15074 15122 -7531.0    15062                     
 ## mod3.lrecon    8 15074 15138 -7529.2    15058 3.5463  2     0.1698</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod3.lrecon,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod3.lrecon.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod3.lrecon,round = 10),
+       &quot;../../results/estimates/VC_mod3.lrecon.xlsx&quot;,
+       overwrite=T)</code></pre>
+</div>
+<div id="random-without-random-effect-correlation-1" class="section level3">
+<h3>Random without random effect correlation</h3>
+<pre class="r"><code>mod4.lrecon&lt;-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+
+          (lrecon.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link=&quot;logit&quot;),weights = anweight,
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
+<pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
+## glm!</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>summary(mod4.lrecon)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: childlessness ~ gndr.c + age10.c + minority.c + lrecon.z.gmc +  
+##     (lrecon.z.gmc || cntry)
+##    Data: exdat
+## Weights: anweight
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##  15076.0  15131.8  -7531.0  15062.0    21367 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.7079 -0.4382 -0.2246  0.2410 12.9028 
+## 
+## Random effects:
+##  Groups  Name         Variance Std.Dev.
+##  cntry   (Intercept)  0.1158   0.3403  
+##  cntry.1 lrecon.z.gmc 0.0000   0.0000  
+## Number of obs: 21374, groups:  cntry, 20
+## 
+## Fixed effects:
+##              Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  -1.28879    0.10002 -12.886  &lt; 2e-16 ***
+## gndr.c       -0.30994    0.04046  -7.661 1.85e-14 ***
+## age10.c      -0.55466    0.01346 -41.200  &lt; 2e-16 ***
+## minority.c   -0.28506    0.10419  -2.736  0.00622 ** 
+## lrecon.z.gmc -0.01473    0.02332  -0.632  0.52744    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) gndr.c ag10.c mnrty.
+## gndr.c       0.016                     
+## age10.c      0.105  0.009              
+## minority.c   0.490  0.003  0.090       
+## lrecn.z.gmc  0.039  0.020 -0.025  0.077
+## optimizer (bobyqa) convergence code: 0 (OK)
+## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>anova(mod2.lrecon,mod4.lrecon)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod2.lrecon: childlessness ~ gndr.c + age10.c + minority.c + lrecon.z.gmc + (1 | cntry)
+## mod4.lrecon: childlessness ~ gndr.c + age10.c + minority.c + lrecon.z.gmc + (lrecon.z.gmc || cntry)
+##             npar   AIC   BIC logLik deviance Chisq Df Pr(&gt;Chisq)
+## mod2.lrecon    6 15074 15122  -7531    15062                    
+## mod4.lrecon    7 15076 15132  -7531    15062     0  1     0.9998</code></pre>
+<pre class="r"><code>anova(mod4.lrecon,mod3.lrecon)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod4.lrecon: childlessness ~ gndr.c + age10.c + minority.c + lrecon.z.gmc + (lrecon.z.gmc || cntry)
+## mod3.lrecon: childlessness ~ gndr.c + age10.c + minority.c + lrecon.z.gmc + (lrecon.z.gmc | cntry)
+##             npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)  
+## mod4.lrecon    7 15076 15132 -7531.0    15062                       
+## mod3.lrecon    8 15074 15138 -7529.2    15058 3.5463  1    0.05968 .
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod4.lrecon,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod4.lrecon.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod4.lrecon,round = 10),
+       &quot;../../results/estimates/VC_mod4.lrecon.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
 </div>
-<div id="galtan" class="section level2">
+<div id="galtan-1" class="section level2">
 <h2>galtan</h2>
 <div id="fixed-2" class="section level3">
 <h3>Fixed</h3>
@@ -1043,11 +1499,11 @@ closer to the GAL pole of the dimension.</p>
 ## 
 ## Fixed effects:
 ##              Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)  -1.29044    0.09981 -12.929  &lt; 2e-16 ***
-## gndr.c       -0.31056    0.04046  -7.676 1.65e-14 ***
+## (Intercept)  -1.29045    0.09981 -12.929  &lt; 2e-16 ***
+## gndr.c       -0.31057    0.04046  -7.676 1.64e-14 ***
 ## age10.c      -0.55355    0.01348 -41.050  &lt; 2e-16 ***
-## minority.c   -0.28770    0.10399  -2.767  0.00566 ** 
-## galtan.z.gmc -0.03717    0.02421  -1.535  0.12471    
+## minority.c   -0.28771    0.10398  -2.767  0.00566 ** 
+## galtan.z.gmc -0.03717    0.02421  -1.535  0.12468    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
@@ -1055,8 +1511,16 @@ closer to the GAL pole of the dimension.</p>
 ##             (Intr) gndr.c ag10.c mnrty.
 ## gndr.c       0.015                     
 ## age10.c      0.105  0.008              
-## minority.c   0.491  0.003  0.089       
+## minority.c   0.490  0.003  0.089       
 ## galtn.z.gmc  0.028  0.019 -0.061  0.048</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod2.galtan,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod2.galtan.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod2.galtan,round = 10),
+       &quot;../../results/estimates/VC_mod2.galtan.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
 <div id="random-2" class="section level3">
 <h3>Random</h3>
@@ -1066,7 +1530,8 @@ closer to the GAL pole of the dimension.</p>
           (galtan.z.gmc|cntry),
         data=exdat,
         family=binomial(link=&quot;logit&quot;),weights = anweight,
-        control = glmerControl(optimizer=&quot;bobyqa&quot;))</code></pre>
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
 <pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
 ## glm!</code></pre>
 <pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
@@ -1078,7 +1543,7 @@ closer to the GAL pole of the dimension.</p>
 ##     (galtan.z.gmc | cntry)
 ##    Data: exdat
 ## Weights: anweight
-## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
 ## 
 ##      AIC      BIC   logLik deviance df.resid 
 ##  15075.8  15139.5  -7529.9  15059.8    21366 
@@ -1089,8 +1554,8 @@ closer to the GAL pole of the dimension.</p>
 ## 
 ## Random effects:
 ##  Groups Name         Variance  Std.Dev. Corr 
-##  cntry  (Intercept)  1.143e-01 0.338015      
-##         galtan.z.gmc 9.991e-05 0.009996 -1.00
+##  cntry  (Intercept)  1.143e-01 0.338016      
+##         galtan.z.gmc 9.991e-05 0.009995 -1.00
 ## Number of obs: 21374, groups:  cntry, 20
 ## 
 ## Fixed effects:
@@ -1098,7 +1563,7 @@ closer to the GAL pole of the dimension.</p>
 ## (Intercept)  -1.28982    0.09957 -12.954  &lt; 2e-16 ***
 ## gndr.c       -0.31048    0.04046  -7.673 1.68e-14 ***
 ## age10.c      -0.55332    0.01349 -41.012  &lt; 2e-16 ***
-## minority.c   -0.28780    0.10401  -2.767  0.00566 ** 
+## minority.c   -0.28781    0.10402  -2.767  0.00566 ** 
 ## galtan.z.gmc -0.03534    0.02464  -1.434  0.15153    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
@@ -1119,6 +1584,93 @@ closer to the GAL pole of the dimension.</p>
 ##             npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
 ## mod2.galtan    6 15072 15120 -7530.0    15060                     
 ## mod3.galtan    8 15076 15140 -7529.9    15060 0.2211  2     0.8953</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod3.galtan,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod3.galtan.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod3.galtan,round = 10),
+       &quot;../../results/estimates/VC_mod3.galtan.xlsx&quot;,
+       overwrite=T)</code></pre>
+</div>
+<div id="random-without-random-effect-correlation-2" class="section level3">
+<h3>Random without random effect correlation</h3>
+<pre class="r"><code>mod4.galtan&lt;-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+
+          (galtan.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link=&quot;logit&quot;),weights = anweight,
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
+<pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
+## glm!</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>summary(mod4.galtan)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc +  
+##     (galtan.z.gmc || cntry)
+##    Data: exdat
+## Weights: anweight
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##  15074.0  15129.8  -7530.0  15060.0    21367 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.7183 -0.4386 -0.2245  0.2419 12.7554 
+## 
+## Random effects:
+##  Groups  Name         Variance Std.Dev.
+##  cntry   (Intercept)  0.1151   0.3393  
+##  cntry.1 galtan.z.gmc 0.0000   0.0000  
+## Number of obs: 21374, groups:  cntry, 20
+## 
+## Fixed effects:
+##              Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  -1.29044    0.09981 -12.930  &lt; 2e-16 ***
+## gndr.c       -0.31057    0.04046  -7.676 1.64e-14 ***
+## age10.c      -0.55355    0.01348 -41.050  &lt; 2e-16 ***
+## minority.c   -0.28769    0.10399  -2.767  0.00566 ** 
+## galtan.z.gmc -0.03717    0.02421  -1.535  0.12468    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) gndr.c ag10.c mnrty.
+## gndr.c       0.015                     
+## age10.c      0.105  0.008              
+## minority.c   0.490  0.003  0.089       
+## galtn.z.gmc  0.028  0.019 -0.061  0.048
+## optimizer (bobyqa) convergence code: 0 (OK)
+## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>anova(mod2.galtan,mod4.galtan)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod2.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + (1 | cntry)
+## mod4.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + (galtan.z.gmc || cntry)
+##             npar   AIC   BIC logLik deviance Chisq Df Pr(&gt;Chisq)
+## mod2.galtan    6 15072 15120  -7530    15060                    
+## mod4.galtan    7 15074 15130  -7530    15060     0  1     0.9999</code></pre>
+<pre class="r"><code>anova(mod4.galtan,mod3.galtan)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod4.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + (galtan.z.gmc || cntry)
+## mod3.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + (galtan.z.gmc | cntry)
+##             npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## mod4.galtan    7 15074 15130 -7530.0    15060                     
+## mod3.galtan    8 15076 15140 -7529.9    15060 0.2211  1     0.6382</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod4.galtan,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod4.galtan.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod4.galtan,round = 10),
+       &quot;../../results/estimates/VC_mod4.galtan.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
 </div>
 </div>
@@ -1135,37 +1687,35 @@ political ideology of the party for which one has voted to be stronger
 if this dimension is salient in the party’s public stance.</p>
 <div id="galtan-salience-fixed-main-effect" class="section level2">
 <h2>galtan salience fixed main effect</h2>
-<pre class="r"><code>mod4.galtan&lt;-
+<pre class="r"><code>mod5.galtan&lt;-
   glmer(childlessness~gndr.c+age10.c+minority.c+
           galtan.z.gmc+galtan_salience.z.gmc+
-          (galtan.z.gmc||cntry),
+          (1|cntry),
         data=exdat,
         family=binomial(link=&quot;logit&quot;),weights = anweight,
         control = glmerControl(optimizer=&quot;bobyqa&quot;))</code></pre>
 <pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
 ## glm!</code></pre>
-<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
-<pre class="r"><code>summary(mod4.galtan)</code></pre>
+<pre class="r"><code>summary(mod5.galtan)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
 ##   Approximation) [glmerMod]
 ##  Family: binomial  ( logit )
 ## Formula: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc +  
-##     galtan_salience.z.gmc + (galtan.z.gmc || cntry)
+##     galtan_salience.z.gmc + (1 | cntry)
 ##    Data: exdat
 ## Weights: anweight
 ## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
 ## 
 ##      AIC      BIC   logLik deviance df.resid 
-##  15075.2  15138.9  -7529.6  15059.2    21366 
+##  15073.2  15129.0  -7529.6  15059.2    21367 
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
 ## -3.7931 -0.4381 -0.2244  0.2411 12.7627 
 ## 
 ## Random effects:
-##  Groups  Name         Variance Std.Dev.
-##  cntry   (Intercept)  0.1146   0.3385  
-##  cntry.1 galtan.z.gmc 0.0000   0.0000  
+##  Groups Name        Variance Std.Dev.
+##  cntry  (Intercept) 0.1146   0.3385  
 ## Number of obs: 21374, groups:  cntry, 20
 ## 
 ## Fixed effects:
@@ -1173,9 +1723,9 @@ if this dimension is salient in the party’s public stance.</p>
 ## (Intercept)           -1.28945    0.09967 -12.937  &lt; 2e-16 ***
 ## gndr.c                -0.31103    0.04047  -7.686 1.52e-14 ***
 ## age10.c               -0.55274    0.01351 -40.909  &lt; 2e-16 ***
-## minority.c            -0.28428    0.10406  -2.732   0.0063 ** 
-## galtan.z.gmc          -0.04012    0.02437  -1.646   0.0997 .  
-## galtan_salience.z.gmc  0.03033    0.03317   0.914   0.3606    
+## minority.c            -0.28428    0.10405  -2.732  0.00629 ** 
+## galtan.z.gmc          -0.04012    0.02437  -1.646  0.09970 .  
+## galtan_salience.z.gmc  0.03033    0.03317   0.914  0.36055    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
@@ -1185,98 +1735,25 @@ if this dimension is salient in the party’s public stance.</p>
 ## age10.c      0.105  0.007                     
 ## minority.c   0.491  0.002  0.091              
 ## galtn.z.gmc  0.026  0.021 -0.069  0.043       
-## gltn_slnc..  0.010 -0.013  0.063  0.036 -0.134
-## optimizer (bobyqa) convergence code: 0 (OK)
-## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+## gltn_slnc..  0.010 -0.013  0.063  0.036 -0.134</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod5.galtan,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod5.galtan.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod5.galtan,round = 10),
+       &quot;../../results/estimates/VC_mod5.galtan.xlsx&quot;,
+       overwrite=T)</code></pre>
 </div>
-<div id="fixed-interaction-between-galtan-and-galtan-salience" class="section level2">
-<h2>fixed interaction between galtan and galtan salience</h2>
-<pre class="r"><code>mod5.galtan&lt;-
-  glmer(childlessness~gndr.c+age10.c+minority.c+
-          galtan.z.gmc+galtan_salience.z.gmc+
-          galtan.z.gmc:galtan_salience.z.gmc+
-          (galtan.z.gmc||cntry),
-        data=exdat,
-        family=binomial(link=&quot;logit&quot;),weights = anweight,
-        control = glmerControl(optimizer=&quot;bobyqa&quot;,
-                               optCtrl=list(maxfun=2e6)))</code></pre>
-<pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
-## glm!</code></pre>
-<pre class="r"><code>summary(mod5.galtan)</code></pre>
-<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
-##   Approximation) [glmerMod]
-##  Family: binomial  ( logit )
-## Formula: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc +  
-##     galtan_salience.z.gmc + galtan.z.gmc:galtan_salience.z.gmc +  
-##     (galtan.z.gmc || cntry)
-##    Data: exdat
-## Weights: anweight
-## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
-## 
-##      AIC      BIC   logLik deviance df.resid 
-##  15067.7  15139.5  -7524.9  15049.7    21365 
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -3.9616 -0.4390 -0.2247  0.2398 13.0026 
-## 
-## Random effects:
-##  Groups  Name         Variance  Std.Dev.
-##  cntry   (Intercept)  0.1082233 0.32897 
-##  cntry.1 galtan.z.gmc 0.0003914 0.01978 
-## Number of obs: 21374, groups:  cntry, 20
-## 
-## Fixed effects:
-##                                    Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)                        -1.27824    0.09807 -13.034  &lt; 2e-16 ***
-## gndr.c                             -0.31033    0.04049  -7.664 1.81e-14 ***
-## age10.c                            -0.55121    0.01352 -40.764  &lt; 2e-16 ***
-## minority.c                         -0.27924    0.10424  -2.679  0.00739 ** 
-## galtan.z.gmc                        0.01179    0.03223   0.366  0.71451    
-## galtan_salience.z.gmc               0.02493    0.03428   0.727  0.46712    
-## galtan.z.gmc:galtan_salience.z.gmc -0.11345    0.03862  -2.937  0.00331 ** 
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Correlation of Fixed Effects:
-##             (Intr) gndr.c ag10.c mnrty. gltn.. glt_..
-## gndr.c       0.016                                   
-## age10.c      0.108  0.008                            
-## minority.c   0.501  0.003  0.092                     
-## galtn.z.gmc  0.046  0.025 -0.031  0.051              
-## gltn_slnc..  0.005 -0.016  0.058  0.028 -0.176       
-## gltn.z.:_.. -0.040 -0.010 -0.032 -0.025 -0.586  0.115</code></pre>
-<div id="marginal-effects" class="section level3">
-<h3>marginal effects</h3>
-<pre class="r"><code>emtrends(mod5.galtan,
-         var=&quot;galtan.z.gmc&quot;,
-         specs=&quot;galtan_salience.z.gmc&quot;,
-         at=list(galtan_salience.z.gmc=c(-1,0,1)),infer=c(T,T))</code></pre>
-<pre><code>##  galtan_salience.z.gmc galtan.z.gmc.trend     SE  df asymp.LCL asymp.UCL
-##                     -1             0.1252 0.0632 Inf   0.00143    0.2490
-##                      0             0.0118 0.0322 Inf  -0.05138    0.0750
-##                      1            -0.1017 0.0327 Inf  -0.16578   -0.0375
-##  z.ratio p.value
-##    1.983  0.0474
-##    0.366  0.7145
-##   -3.107  0.0019
-## 
-## Results are averaged over the levels of: gndr.c, minority.c 
-## Confidence level used: 0.95</code></pre>
-</div>
-</div>
-<div id="random-interaction-between-galtan-and-galtan-salience" class="section level2">
-<h2>random interaction between galtan and galtan salience</h2>
+<div id="galtan-salience-random-main-effect" class="section level2">
+<h2>galtan salience random main effect</h2>
 <pre class="r"><code>mod6.galtan&lt;-
   glmer(childlessness~gndr.c+age10.c+minority.c+
           galtan.z.gmc+galtan_salience.z.gmc+
-          galtan.z.gmc:galtan_salience.z.gmc+
-          (galtan.z.gmc+galtan_salience.z.gmc+
-             galtan.z.gmc:galtan_salience.z.gmc||cntry),
+          (galtan_salience.z.gmc|cntry),
         data=exdat,
         family=binomial(link=&quot;logit&quot;),weights = anweight,
-        control = glmerControl(optimizer=&quot;bobyqa&quot;,
-                               optCtrl=list(maxfun=2e6)))</code></pre>
+        control = glmerControl(optimizer=&quot;bobyqa&quot;))</code></pre>
 <pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
 ## glm!</code></pre>
 <pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
@@ -1285,50 +1762,428 @@ if this dimension is salient in the party’s public stance.</p>
 ##   Approximation) [glmerMod]
 ##  Family: binomial  ( logit )
 ## Formula: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc +  
+##     galtan_salience.z.gmc + (galtan_salience.z.gmc | cntry)
+##    Data: exdat
+## Weights: anweight
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##  15072.9  15144.6  -7527.5  15054.9    21365 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.6812 -0.4380 -0.2244  0.2381 12.8887 
+## 
+## Random effects:
+##  Groups Name                  Variance Std.Dev. Corr 
+##  cntry  (Intercept)           0.114741 0.33874       
+##         galtan_salience.z.gmc 0.004498 0.06707  -1.00
+## Number of obs: 21374, groups:  cntry, 20
+## 
+## Fixed effects:
+##                       Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)           -1.29691    0.09983 -12.991  &lt; 2e-16 ***
+## gndr.c                -0.30766    0.04050  -7.597 3.03e-14 ***
+## age10.c               -0.55372    0.01352 -40.947  &lt; 2e-16 ***
+## minority.c            -0.29182    0.10425  -2.799  0.00512 ** 
+## galtan.z.gmc          -0.05366    0.02521  -2.128  0.03331 *  
+## galtan_salience.z.gmc  0.03637    0.03727   0.976  0.32907    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) gndr.c ag10.c mnrty. gltn..
+## gndr.c       0.013                            
+## age10.c      0.106  0.005                     
+## minority.c   0.492  0.001  0.092              
+## galtn.z.gmc  0.032  0.010 -0.056  0.047       
+## gltn_slnc.. -0.371 -0.008  0.050  0.023 -0.136
+## optimizer (bobyqa) convergence code: 0 (OK)
+## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>anova(mod5.galtan,mod6.galtan)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod5.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + galtan_salience.z.gmc + (1 | cntry)
+## mod6.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + galtan_salience.z.gmc + (galtan_salience.z.gmc | cntry)
+##             npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## mod5.galtan    7 15073 15129 -7529.6    15059                     
+## mod6.galtan    9 15073 15145 -7527.5    15055 4.2644  2     0.1186</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod6.galtan,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod6.galtan.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod6.galtan,round = 10),
+       &quot;../../results/estimates/VC_mod6.galtan.xlsx&quot;,
+       overwrite=T)</code></pre>
+</div>
+<div id="galtan-salience-random-main-effect-without-random-effect-correlation" class="section level2">
+<h2>galtan salience random main effect without random effect
+correlation</h2>
+<pre class="r"><code>mod7.galtan&lt;-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          (galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link=&quot;logit&quot;),weights = anweight,
+        control = glmerControl(optimizer=&quot;bobyqa&quot;))</code></pre>
+<pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
+## glm!</code></pre>
+<pre class="r"><code>summary(mod7.galtan)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc +  
+##     galtan_salience.z.gmc + (galtan_salience.z.gmc || cntry)
+##    Data: exdat
+## Weights: anweight
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##  15075.0  15138.8  -7529.5  15059.0    21366 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.7704 -0.4383 -0.2243  0.2409 12.7582 
+## 
+## Random effects:
+##  Groups  Name                  Variance Std.Dev.
+##  cntry   (Intercept)           0.114632 0.33857 
+##  cntry.1 galtan_salience.z.gmc 0.001105 0.03325 
+## Number of obs: 21374, groups:  cntry, 20
+## 
+## Fixed effects:
+##                       Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)           -1.29034    0.09971 -12.941  &lt; 2e-16 ***
+## gndr.c                -0.31008    0.04054  -7.649 2.02e-14 ***
+## age10.c               -0.55282    0.01352 -40.897  &lt; 2e-16 ***
+## minority.c            -0.28570    0.10413  -2.744  0.00608 ** 
+## galtan.z.gmc          -0.04191    0.02495  -1.680  0.09305 .  
+## galtan_salience.z.gmc  0.03240    0.03600   0.900  0.36817    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) gndr.c ag10.c mnrty. gltn..
+## gndr.c       0.014                            
+## age10.c      0.105  0.006                     
+## minority.c   0.492  0.000  0.092              
+## galtn.z.gmc  0.029  0.009 -0.062  0.047       
+## gltn_slnc..  0.003 -0.003  0.056  0.026 -0.143</code></pre>
+<pre class="r"><code>anova(mod5.galtan,mod7.galtan)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod5.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + galtan_salience.z.gmc + (1 | cntry)
+## mod7.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + galtan_salience.z.gmc + (galtan_salience.z.gmc || cntry)
+##             npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## mod5.galtan    7 15073 15129 -7529.6    15059                     
+## mod7.galtan    8 15075 15139 -7529.5    15059 0.1623  1     0.6871</code></pre>
+<pre class="r"><code>anova(mod7.galtan,mod6.galtan)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod7.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + galtan_salience.z.gmc + (galtan_salience.z.gmc || cntry)
+## mod6.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + galtan_salience.z.gmc + (galtan_salience.z.gmc | cntry)
+##             npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)  
+## mod7.galtan    8 15075 15139 -7529.5    15059                       
+## mod6.galtan    9 15073 15145 -7527.5    15055 4.1021  1    0.04283 *
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod7.galtan,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod7.galtan.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod7.galtan,round = 10),
+       &quot;../../results/estimates/VC_mod7.galtan.xlsx&quot;,
+       overwrite=T)</code></pre>
+</div>
+<div id="fixed-interaction-between-galtan-and-galtan-salience" class="section level2">
+<h2>fixed interaction between galtan and galtan salience</h2>
+<pre class="r"><code>mod8.galtan&lt;-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          (galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link=&quot;logit&quot;),weights = anweight,
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
+<pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
+## glm!</code></pre>
+<pre class="r"><code>summary(mod8.galtan)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc +  
 ##     galtan_salience.z.gmc + galtan.z.gmc:galtan_salience.z.gmc +  
-##     (galtan.z.gmc + galtan_salience.z.gmc + galtan.z.gmc:galtan_salience.z.gmc ||  
-##         cntry)
+##     (galtan_salience.z.gmc || cntry)
 ##    Data: exdat
 ## Weights: anweight
 ## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
 ## 
 ##      AIC      BIC   logLik deviance df.resid 
-##  15071.4  15159.1  -7524.7  15049.4    21363 
+##  15067.4  15139.1  -7524.7  15049.4    21365 
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -3.9003 -0.4389 -0.2245  0.2403 12.9834 
+## -3.9013 -0.4388 -0.2244  0.2404 12.9714 
 ## 
 ## Random effects:
-##  Groups  Name                               Variance  Std.Dev. 
-##  cntry   (Intercept)                        1.081e-01 3.288e-01
-##  cntry.1 galtan.z.gmc                       1.511e-04 1.229e-02
-##  cntry.2 galtan_salience.z.gmc              1.809e-03 4.253e-02
-##  cntry.3 galtan.z.gmc:galtan_salience.z.gmc 2.550e-14 1.597e-07
+##  Groups  Name                  Variance Std.Dev.
+##  cntry   (Intercept)           0.108199 0.32894 
+##  cntry.1 galtan_salience.z.gmc 0.001882 0.04339 
 ## Number of obs: 21374, groups:  cntry, 20
 ## 
 ## Fixed effects:
-##                                    Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)                        -1.27917    0.09809 -13.041  &lt; 2e-16 ***
-## gndr.c                             -0.30883    0.04058  -7.611 2.72e-14 ***
-## age10.c                            -0.55152    0.01354 -40.748  &lt; 2e-16 ***
-## minority.c                         -0.28066    0.10433  -2.690  0.00714 ** 
-## galtan.z.gmc                        0.00731    0.03267   0.224  0.82297    
-## galtan_salience.z.gmc               0.02943    0.03853   0.764  0.44494    
-## galtan.z.gmc:galtan_salience.z.gmc -0.11655    0.04009  -2.907  0.00365 ** 
+##                                     Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)                        -1.279440   0.098059 -13.048  &lt; 2e-16 ***
+## gndr.c                             -0.308859   0.040574  -7.612 2.69e-14 ***
+## age10.c                            -0.551562   0.013528 -40.772  &lt; 2e-16 ***
+## minority.c                         -0.281065   0.104245  -2.696  0.00701 ** 
+## galtan.z.gmc                        0.006075   0.029571   0.205  0.83724    
+## galtan_salience.z.gmc               0.030059   0.037990   0.791  0.42880    
+## galtan.z.gmc:galtan_salience.z.gmc -0.115439   0.038348  -3.010  0.00261 ** 
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) gndr.c ag10.c mnrty. gltn.. glt_..
 ## gndr.c       0.015                                   
-## age10.c      0.109  0.005                            
-## minority.c   0.501  0.001  0.093                     
-## galtn.z.gmc  0.050  0.010 -0.023  0.058              
-## gltn_slnc.. -0.002 -0.001  0.043  0.017 -0.185       
-## gltn.z.:_.. -0.039 -0.019 -0.023 -0.025 -0.538  0.055
+## age10.c      0.108  0.005                            
+## minority.c   0.501  0.001  0.092                     
+## galtn.z.gmc  0.042  0.008 -0.038  0.046              
+## gltn_slnc..  0.003  0.000  0.049  0.024 -0.127       
+## gltn.z.:_.. -0.032 -0.018 -0.016 -0.013 -0.486  0.004</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod8.galtan,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod8.galtan.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod8.galtan,round = 10),
+       &quot;../../results/estimates/VC_mod8.galtan.xlsx&quot;,
+       overwrite=T)</code></pre>
+<div id="marginal-effects" class="section level3">
+<h3>marginal effects</h3>
+<pre class="r"><code>emtrends(mod8.galtan,
+         var=&quot;galtan.z.gmc&quot;,
+         specs=&quot;galtan_salience.z.gmc&quot;,
+         at=list(galtan_salience.z.gmc=c(-1,0,1)),
+         infer=c(T,T))</code></pre>
+<pre><code>##  galtan_salience.z.gmc galtan.z.gmc.trend     SE  df asymp.LCL asymp.UCL
+##                     -1            0.12151 0.0587 Inf   0.00645    0.2366
+##                      0            0.00607 0.0296 Inf  -0.05188    0.0640
+##                      1           -0.10936 0.0353 Inf  -0.17848   -0.0402
+##  z.ratio p.value
+##    2.070  0.0385
+##    0.205  0.8372
+##   -3.101  0.0019
+## 
+## Results are averaged over the levels of: gndr.c, minority.c 
+## Confidence level used: 0.95</code></pre>
+<pre class="r"><code>round(exp(c(0.12151,0.00645,0.2366)),2)</code></pre>
+<pre><code>## [1] 1.13 1.01 1.27</code></pre>
+<pre class="r"><code>round(exp(c(0.00607,-0.05188,0.0640)),2)</code></pre>
+<pre><code>## [1] 1.01 0.95 1.07</code></pre>
+<pre class="r"><code>round(exp(c(-0.10936,-0.17848,-0.0402)),2)</code></pre>
+<pre><code>## [1] 0.90 0.84 0.96</code></pre>
+</div>
+</div>
+<div id="random-interaction-between-galtan-and-galtan-salience" class="section level2">
+<h2>random interaction between galtan and galtan salience</h2>
+<pre class="r"><code>mod9.galtan&lt;-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          galtan.z.gmc+galtan_salience.z.gmc+
+          galtan.z.gmc:galtan_salience.z.gmc+
+          (galtan_salience.z.gmc+
+             galtan.z.gmc:galtan_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link=&quot;logit&quot;),weights = anweight,
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
+<pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
+## glm!</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>summary(mod9.galtan)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc +  
+##     galtan_salience.z.gmc + galtan.z.gmc:galtan_salience.z.gmc +  
+##     (galtan_salience.z.gmc + galtan.z.gmc:galtan_salience.z.gmc ||  
+##         cntry)
+##    Data: exdat
+## Weights: anweight
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##  15069.4  15149.1  -7524.7  15049.4    21364 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.9013 -0.4388 -0.2244  0.2404 12.9714 
+## 
+## Random effects:
+##  Groups  Name                               Variance Std.Dev.
+##  cntry   (Intercept)                        0.108197 0.32893 
+##  cntry.1 galtan_salience.z.gmc              0.001882 0.04339 
+##  cntry.2 galtan_salience.z.gmc:galtan.z.gmc 0.000000 0.00000 
+## Number of obs: 21374, groups:  cntry, 20
+## 
+## Fixed effects:
+##                                     Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)                        -1.279440   0.098060 -13.048  &lt; 2e-16 ***
+## gndr.c                             -0.308859   0.040574  -7.612 2.69e-14 ***
+## age10.c                            -0.551562   0.013528 -40.772  &lt; 2e-16 ***
+## minority.c                         -0.281062   0.104247  -2.696  0.00702 ** 
+## galtan.z.gmc                        0.006076   0.029571   0.205  0.83722    
+## galtan_salience.z.gmc               0.030059   0.037990   0.791  0.42881    
+## galtan.z.gmc:galtan_salience.z.gmc -0.115440   0.038348  -3.010  0.00261 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) gndr.c ag10.c mnrty. gltn.. glt_..
+## gndr.c       0.015                                   
+## age10.c      0.108  0.005                            
+## minority.c   0.501  0.001  0.092                     
+## galtn.z.gmc  0.042  0.008 -0.038  0.046              
+## gltn_slnc..  0.003  0.000  0.049  0.024 -0.127       
+## gltn.z.:_.. -0.032 -0.018 -0.016 -0.013 -0.486  0.004
 ## optimizer (bobyqa) convergence code: 0 (OK)
 ## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>anova(mod8.galtan,mod9.galtan)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod8.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + galtan_salience.z.gmc + galtan.z.gmc:galtan_salience.z.gmc + (galtan_salience.z.gmc || cntry)
+## mod9.galtan: childlessness ~ gndr.c + age10.c + minority.c + galtan.z.gmc + galtan_salience.z.gmc + galtan.z.gmc:galtan_salience.z.gmc + (galtan_salience.z.gmc + galtan.z.gmc:galtan_salience.z.gmc || cntry)
+##             npar   AIC   BIC  logLik deviance Chisq Df Pr(&gt;Chisq)
+## mod8.galtan    9 15067 15139 -7524.7    15049                    
+## mod9.galtan   10 15069 15149 -7524.7    15049     0  1          1</code></pre>
+<pre class="r"><code>export(rownames_to_column(
+  getFE_glmer(mod9.galtan,round = 10,p.round=10)),
+       &quot;../../results/estimates/FE_mod9.galtan.xlsx&quot;,
+       overwrite=T)
+
+export(getVC(mod9.galtan,round = 10),
+       &quot;../../results/estimates/VC_mod9.galtan.xlsx&quot;,
+       overwrite=T)</code></pre>
+<div id="plot" class="section level3">
+<h3>Plot</h3>
+<pre class="r"><code>p&lt;-
+  emmip(mod8.galtan, galtan_salience.z.gmc ~ galtan.z.gmc,
+        at=list(galtan_salience.z.gmc = c(-1,0,1),
+                #minority.c = c(-0.5,0.5),
+                galtan.z.gmc=seq(from=-2,to=2,by=0.01)),
+        plotit=F,CIs=TRUE,type=&quot;response&quot;)
+
+head(p)</code></pre>
+<pre><code>##   galtan_salience.z.gmc galtan.z.gmc      yvar         SE  df       LCL
+## 1                    -1        -2.00 0.1459656 0.01906731 Inf 0.1124071
+## 2                     0        -2.00 0.1815825 0.01680794 Inf 0.1509286
+## 3                     1        -2.00 0.2236146 0.02249761 Inf 0.1826181
+## 4                    -1        -1.99 0.1461172 0.01903070 Inf 0.1126116
+## 5                     0        -1.99 0.1815915 0.01678716 Inf 0.1509726
+## 6                     1        -1.99 0.2234248 0.02244883 Inf 0.1825142
+##         UCL tvar  xvar
+## 1 0.1874273   -1 -2.00
+## 2 0.2168720    0 -2.00
+## 3 0.2707658    1 -2.00
+## 4 0.1874856   -1 -1.99
+## 5 0.2168343    0 -1.99
+## 6 0.2704715    1 -1.99</code></pre>
+<pre class="r"><code>#p$ethnic_minority=
+#  ifelse(p$minority.c==(-0.5),
+#         &quot;Ethnic majority&quot;,&quot;Ethnic minority&quot;)
+p$galtan_salience&lt;-p$tvar
+levels(p$galtan_salience)&lt;-c(&quot;Low Salience&quot;,&quot;Average Salience&quot;,&quot;High Salience&quot;)
+
+
+min.low&lt;-
+  min(exdat[exdat$galtan_salience.z.gmc&lt;=(-1),
+            &quot;galtan.z.gmc&quot;])
+max.low&lt;-
+  max(exdat[exdat$galtan_salience.z.gmc&lt;=(-1),
+            &quot;galtan.z.gmc&quot;])
+
+
+p$filter.low&lt;-
+  ifelse(p$galtan_salience.z.gmc==(-1) &amp;
+           (p$galtan.z.gmc&lt;min.low | 
+              p$galtan.z.gmc&gt;max.low),0,1)
+
+table(p$filter.low)</code></pre>
+<pre><code>## 
+##   0   1 
+## 237 966</code></pre>
+<pre class="r"><code>min.mid&lt;-
+  min(exdat[exdat$galtan_salience.z.gmc&gt;(-1) |
+              exdat$galtan_salience.z.gmc&lt;(1),
+            &quot;galtan.z.gmc&quot;])
+max.mid&lt;-
+  max(exdat[exdat$galtan_salience.z.gmc&gt;(-1) |
+              exdat$galtan_salience.z.gmc&lt;(1),
+            &quot;galtan.z.gmc&quot;])
+
+
+p$filter.mid&lt;-
+  ifelse(p$galtan_salience.z.gmc==(0) &amp;
+           (p$galtan.z.gmc&lt;min.mid | 
+              p$galtan.z.gmc&gt;max.mid),0,1)
+
+table(p$filter.mid)</code></pre>
+<pre><code>## 
+##    0    1 
+##   17 1186</code></pre>
+<pre class="r"><code>min.high&lt;-
+  min(exdat[exdat$galtan_salience.z.gmc&gt;=(1) ,
+            &quot;galtan.z.gmc&quot;])
+max.high&lt;-
+  max(exdat[exdat$galtan_salience.z.gmc&gt;=(1) ,
+            &quot;galtan.z.gmc&quot;])
+
+
+
+p$filter.high&lt;-
+  ifelse(p$galtan_salience.z.gmc==(1) &amp;
+           (p$galtan.z.gmc&lt;min.high | 
+              p$galtan.z.gmc&gt;max.high),0,1)
+
+table(p$filter.high)</code></pre>
+<pre><code>## 
+##    0    1 
+##   17 1186</code></pre>
+<pre class="r"><code>p.ex&lt;-p[p$filter.low!=0 &amp; p$filter.mid!=0 &amp; p$filter.high!=0,]
+
+met.brewer(&quot;Archambault&quot;)</code></pre>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAAAAHgCAMAAABNUi8GAAABzlBMVEUAAAAAADAAADMAADQAAFUAAFsAAF0AMVUAMVsAMXcAMYAANDQANF0ANIIAVpcAWKIAXqYzAAAzAFszMQAzMTMzMVszWIAzWKIze8M1AAA1MQA1MTA1MVU1MXc1VjA1Vnc1Vpc1ebY4GmE5AAA5ADQ5NAA5NDQ5NF05Xl05XoI5XqY5g6Y5g8hcAABcMQBcMTNcWFtce6Jce8NcnMNcnONfAABfMQBfVjBfVndfeZdfmbZfmdRkAABkNABkNDRkXjRkXoJkg6Zkg8hkp8hkp+h8S3OAMQCAMTOAWDOAWKKAe1uAnMOAvOOGMQCGVgCGVjCGmbaGuNSIoNyNNACNNDSNXjSNg12Np8iNyeijWACjWDOjezOje1ujvMOjvOOj2+OqVgCqVjCqeVWquLaquNSq1tSrMymzXgCzXjSzgzSzg12zycizyeiz6ujFezPFnFvFvKLF2+PNeTDNmVXNuJfN1tTXgzTXp13Xp4LXyabXyejX0d/X6qbX6ujlnFvlvIDlvKLlvMPl26Ll28Pl2+PnhCnn7PjtlozumVXuuHfuuJfuuLbu1pfu1rbu1tT50Ur65tT7p137yYL7yab7ycj76qb76sj76uj+9tv///+wQoQXAAAACXBIWXMAAA7DAAAOwwHHb6hkAAALlUlEQVR4nO3b+3scVRkH8AlpDUJoE7WaCCgQKVqK13q3am2pKGILiGUrFgqFxlqqNDbWS7KVFCnFBNPUXflvnTO3nd3u6jZhcJJ8vj+kkzOz8+R5+nneM++cs9H7IjVO9P/+A0T+WwCVWgdQqXUAlVoHUKl1AJVaB1CpdQCVWqcD9Jkq81ClebzKvF1lXqsyb1Wa96oMoIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKAfOtC/V5m/VJqrVaZdZVaqzD8rzb+rDKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAgoooIACCiiggAIKKKCAAvoBAF17Ltq/YYz9bjIktevHph8EdPsAXbzjZ7cB9Oa5mSjaKNABNxnG2fLL0/FHAd1GQBvR1PAXt57du3GgrV/0v8kwzl66F9DtBbQ5Ge18ceirY0Y3ZjZcQQfcZDhp//g6oNsJ6IW4IB24HaD/+t4HALTvTdYB9Np3Ad3aQN98LAZ61xubCOjyUx2gy08BusWBLsY+o+HbpJoBvRYBurWBLh3d+dNY6O7NCTSe7QHd2kCbk7vDJD90m1QroOEI0K0NtBHP7rfTJtUJ6DvfiADd4kDffCzuj5qTvW3SlSdisc0vRnd8Lfl16YWPxxT2/LoL6Nr3o2j0cIGrdW5vfM3oIyc6AzMT4efDUfTI+TBwufyB9CbJ2bsPL+RAl1++N77JyH3Hg6jQrWevPNPDkafLQJePRXmGeukE6GYEeiEpnY2uNulvL0yGkvq78F+fTP3NyTtPXV36VRR9qgR0PrWxL7P1x5kotrd2MIomEp2X46P4MLzuDG6fb7eeTT8wUQJ642A6Nv56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" /><!-- --></p>
+<pre class="r"><code>met.brewer(&quot;Archambault&quot;)[c(1,3,2)]</code></pre>
+<pre><code>## [1] &quot;#88a0dc&quot; &quot;#7c4b73&quot; &quot;#381a61&quot;</code></pre>
+<pre class="r"><code>p1&lt;-ggplot(p.ex,aes(y=yvar,x=xvar,color=galtan_salience))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab(&quot;GAL-TAN&quot;)+
+  ylab(&quot;P(Childlessness)&quot;)+
+  scale_color_manual(values=met.brewer(&quot;Archambault&quot;)[c(1,3,2)])+
+  facet_wrap(~galtan_salience,ncol=3)+
+  theme(legend.position = &quot;none&quot;,
+        text=element_text(size=16,  family=&quot;sans&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;,
+                                        #colour = &quot;black&quot;,
+                                        #size = 0.5, linetype = &quot;solid&quot;
+                                        ),
+        panel.grid.major.x = element_line(size = 0.5, linetype = 2,
+                                        colour = &quot;black&quot;))
+p1</code></pre>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAAAAHgCAMAAABNUi8GAAABuVBMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrYZGT8ZGWIZPz8ZP4EZYoEZYp8aGhocDTEqFEkxF1UzMzM1GVs4GmE6AAA6AGY6OgA6Ojo6OmY6ZmY6ZpA6ZrY6kNs+Jjo/GRk/GT8/GWI/Pxk/gZ8/gb1EKGpEUG5NTU1NTW5NTY5NbqtNjshQNnRdOVdiGRliGT9iYmJin9lmAABmADpmOgBmOjpmZjpmZmZmZpBmeKVmkJBmkLZmkNtmtttmtv9pU4htQmVuTU1uTW5uTY5uq+R1R2x8S3OBPxmBYhmBn4GBvdmEVnuIoNyMYYSOTU2OyP+Ppd6QOgCQZjqQZmaQkGaQkLaQtpCQttuQ2/+Wq+CbjLCceJafYhmfgT+fvYGf2Z+f2dmlt+Srbk2rjk2r5P+2ZgC2Zjq2kGa2kJC2tra2ttu229u22/+2//+9gT+9n2K9pbm92b292dnDz+3Ijk3I/8jI///Zn2LZvYHZ2Z/Z2b3Z2dnbkDrbkGbbtmbbtpDbtrbb27bb29vb2//b/7bb///kq27k////tmb/tpD/yI7/25D/27b/29v/5Kv//7b//8j//9v//+T///+pchVSAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAgAElEQVR4nO2djX/e1HXHFZZQxhooi0co7dpuMENxWWFQt2ONy5o1W2MnDXtp7WRrzQgZtHGzPRkB4gWaLm7mlCTm+Yun90e6upLuufdc3SP59/vAE1nPsXSu9PWVfvfoJZpDkGBFoROAoC4BUEi0ACgkWgAUEi0ACokWAIVEiwfQm6PXVBoymT0CQOuaSkMms0cAaF1Tachk9ggArWsqDZnMHgGgdU2lIZPZIwC0rqk0ZDJ7BIDWNZWGTGaPANC6ptKQyewRAFrXVBoymT0SGNBLj/9XX8hHLx8/fvyxX1TmfPi1V0x+0UqUhlw6/kWXVXltmNUe+fhMuvL0n2oeH5+pN3TIXSIe0BvHn0vivvDjxaxka/gSoSEffu3b1ayo8tswZ0Dr82uADrpLxAOaRXz0cmUTCQF057F/+9pz9mvy2zCfgA66S8QAuhMfNZ7LNkX6F5p/U9tYl+KY+MfyeJL9Thzz3KX0i3RO9oedf2W7PQwikx2UZHEjXWGSU7HOS390JskizzZN+/F/reR7c4CGOQOa5pFn/vGZuEXHi3yH3SVSAE0OGB/GHdJOfGqzE5/bxS3MvrhRbpg0OCG42Bo7+e98fOb4K9kfdDInWUL5le32MIi8Ea/0RrHiZK3lOi9lmObZ3ryUNqmS7xANYwG0yHyRxwCZtzQkMKBZ5nEbkv7o0rcf/68Pv16c4dw4nv8JZoeRuLH51sh/57FfZNs1npNukY9efu5m+RU5IfOGJHsv2wXxRLyTFutMvqlnm+5zNSmvDbME9HimDNAy8zKPITJvaUhgQMvjZNyWj/7yH77xixvVlsSuMTtKJFuw3Brl72SnSMUWrS2OnJBxQ7INnrCYrCb+f7HOolFZtjvp/Gq+QzTMEtBaD1pmXuYxROYtDZEC6M1LX/zwGz9/+ZVL9YGNj88kPVO6v8utsZP/uWu2RvkVOSHjhhSryM6bq+nkjSqyzTqNnWrAAA1jAbTIXAPoYLtEFKDJKd3O479+/D/P/PmZvCFFA+OAbHRjR/lzvVmYzOafq41MG/LRy4t9ufPYz+Nj2GKdaaPKbJUetJDnhrEAqu9Bh90lQgAtz0Fvfvj1P4ut0h8Wp6DFqXm8EdImJn+3tROeeG65NdLg7Jz9OcttYtqQG3lXsHP8lXxAdLHODNBqtpVz0CIpzw3jALRyDloFdNhdIgTQ3MWnJ9SpO66ckBf9Ufr1zuKEJ/2dZAMstl9CeLoNiq/IMm3IpfwcOV3JpTTHcp1po8psFy6+npTfhnEAWnHxtUP8oLskNKDFidxilKxENVdaV8vPAGJ/+esv/Lg26PbFyvFEGXSzKUQaNmQxXpKkmx3pynVme7LINhtN/PtKvkM0jAXQInP1HHTIXRIYUHHy1ZBLNn8tDuLbI0NnrgiA1sXfkPRs9YbFgIKTOPZImMwVAdC6PDRkpzgeDimWPRIkc0UAtK6pNGQyewSA1jWVhkxmjwDQuqbSkMnsEV5AIciTACgkWgAUEi0ACokWE6C0xQiOFpwaLVhwaqRoABpwZXzRANRvFnKiBadGCxacGikagAZcGV80AIWgIAKgkGgBUEi0ACgkWjBJAVfGFw2T5DcLOdGCU6MFC06NFA1AA66MLxqA+s1CTrTg1GjBglMjRcMkQaIFQCHRAqDT1tZW6AwcBUAnrrXQCTgKJingyvii203SihGhkzdJYvYUAFXmrK2YHOQB6FiiBadGCy4BXTPpQgHoWKIFp0YLXgD6vEEXOnlAIalaW1tZCZ2DiwDoxBUDujbmoSYAOnElgI6ZUAA6caWAjngwFCYp4Mr4ortM0kryH+fKxmiSxOwpAKrMyXrQvsFQADqWaMGp0YLrgPYd5AHoWKIFp0YLVgDtGQydPKCQVOWAjnYwFIBOXAWgayMlFIBOXCWgIx0MBaAT1wLQcQ6GwiQFXBlfdK9J6hkMnbxJErOnAKgyp9KDdgyGAtCxRAtOjRasAbSDUAA6lmjBqdGCdYC2n4ZOHlBIqmqAPh86G7oA6MRVA3SEw/UAdOKqAzq+wVAAOnEpgI6OUJikgCvjizY0Sa3D9ZM3SWL2FABV5qiA6ofrAehYogWnRgtu7UG1g6EAdCzRglOjBbcCqh1rmjygkFQ1ATV6Fo4YAdCJSwPoqAgFoBOXBtBRXbsMQCcuHaBjGgyFSQq4Mr5oikla0ZyGTt4kidlTAFSZowW0MVwPQMcSLTg1WnA3oOpwPQAdS7Tg1GjBPT2ocpCfPKCQVLUAOppLQwHoxNUG6FgGQwHoxNUK6EgIBaATVyugI7lPHiYp4Mr4oskmSbk0dPImScyeAqDKnA5AKwd5ADqWaMGp0YJNetAFoQB0LNGCU6MFmwC6GGuaPKCQVHUCOgInD0Anrm5A5RMKQCeubkDlXxoKQCeuHkDFj4bCJAVcGV+0pUkqx5omb5LE7CkAqszp7UFTQgHoWKIFp0YLNgY0PcgD0LFEC06NFmwOaHLx8uQBhaTKoAcVfWkoAJ24DAAV/dRQADpxmQAqeawJgE5cZoDKLSjBJAVcGV+0k4uPP79EInSEJknMngKgyhwzQJ8kHeQBaLhowanRgomAdr2Gjjs1UjQADbgyvmj3HrTnhfKcqZGie399f3l5+aXyp73KT9e/+TvSuqEQMgNU7lhTH6D7y+fnD88VTO4tn47nvJR/A0BHIGNAhV551wPo528nNO6/8E76U0bq3osfpNMAdAwyB1TmWFMPoPffPF1+Jv+ejz/3Ulz3vvnvAHQEIgAq8vL6XkATJB+eO12Zdz3pQe//7TvVc1AxbgEmSZljapLKK+/8p0aK7vn15BR0XjkJnWfnofGh/3Rhkp6KJWdPAVBlDgVQ05KnaEAzj7QXw4keVE40E6CGo6GCAG0c4tP+MznAzwGooGiuHtRsNFQUoJlJOp//fD3lMx0OjZWbe0iwCCZpTeJoKGmYKQbz/OI7DNSPQURAxV15RxqoL4abMgHQMYgMqDBCjUudCan1IzsAHYPIgAobDcXFIgFXxhfNZZLMRkMFmaSBspATLTg1WrA9oP030QHQcNGCU6MFOwDa24UC0HDRglOjBbsA2kfoCAGFpIru4uMPQUYJgE5cVoAKIhSATlx2gMoZDQWgE5cloKSb6HwKJingyviieU3SWg+hIzRJYvYUAFXm2ALaNRoKQMNFC06NFuwMaMeFTQA0XLTg1GjB7oC2G6URAgpJla2LTz9DJz8HoJOXC6ASrDwAnbicelAB4/UAdOJyAlTA08FhkgKujC/aj0lqs/IjNEli9hQAVeY4Aqp9YhMADRctODVaMBegOisPQMNFC06NFswGqMYojRBQSKrcTFJ4Kw9AJy53QMMSCkAnLgZAgw42NQA9uH379p0QmUBexAFoyAfi1AH9/VtLUaIjz/7KZTEjjhacGi2Yz8Wnn5ypkaKrMz55LWbz5Orq6sn436O/HDALOdGCU6MFMwO61b02rnZ07ZCDd6M/eKM4uH92ZSn6CuFIH2pPbXMvWwxywgCtGaUggD64cPSntW8+ee3Y1aGysI3eBqBtwcyA1ggNAujB+43gT8WbJQ2gUF0sJin5CGTlRz3MtAlAe8UGaCArP2ZAZwC0X3yAhrnAXgfob95rHu4lCoAaiBPQEIQqgN565up8N4qiY8TTzxBuYXtbByhMUn0Ol0lKrfwaS2qk6PqMu9EjVx+8Gr1xIfoqabEANHD0MIAWhAYD9OBCdCruQI/dubdE7EID7KltANoV7AXQnNBggD549ZGr88vRo9nEgFlYRG8D0M5gP4BmL1IKCmh8hD9FB3R4tQEK1cVqktb6H27LLeUQf+Rn95ZiNsmH+MG1CUDNxA3o0G/trnepiYGPj/AHZJM0tGYAtKJrZzdav+MHdNg+tA7owbtRdPRqfIQX3oHOtgFooYsbGxc3LrZ9e+LECW5AhyVUewp78FuWxfiL7gD0cJmkuO+8GGvjW/pfP5GpHzpjk5R+/jF7O9qjmUqdw+6pjE0AejHpOw0APcEM6JcoZXkPO8Si1AlAh46+tpF2np2AnijFDCil6Mm7Q0ZR6tw89IAm550Zm4aAnuAG1JxQGaXOIbW93QXo9HVx4+zFks0cUL1JqgB6gsCfyeRgT2ZkKnUOqO1DDehG5bjeC2iDUEZDPxShTKXOAXWIAY2P7DUqSYCeYKCyOvn8MINNoyt1ZmgePkAvnl10nsaAqoRyAjpQ0ZOp1DmYW5j1ATpFk5QOJ2mo7DNJc5VQRpO0ZvpGT9YdYl3qHGy/bh86QDuO61RA24tKVoCaEcq6Q6xLnUPt19mhAvTaRmWw0w5QhVBeQI2cko8dIrbUWaI5fUCv/Z1yzmkJ6FqDUEZATQiVUeocRtsGgE5B2nPOTkBbLxaZrzUI5TJJ6c/evbwK6MF/rH73zsH7MkdBBwS0/fo1z9rYaDnntAZ0pY4oL6Devbxa6lyK0mKSyHH6ksoBAE2sydmNa74Wr13lxfyUU0+hUEB9X8CsljqP/Es2WC+w1Lk9KKDZzk+QGQDTpNc820OhA6B1QrkB9VtTapQ60zF6ieOgMzNAmc7JqwRsZD2bya/TVhZro7Xb/AEF0A6TlJLU4uWdTZKBl+c0SVkl6ZGrIu/q3A4GaKUzTc4PWVZ2MVtYR7fJCmiLl+cBtNspHRZAN0MDWkye3ShYvUhfWUZlb2GIH9AVrZdnArTTKXECmpQ6UzbvUi8I9Q5ojcqggFaQOfuDsl/NsFWXtrFRDfiB7jq5oQBd8wlo11GeudR57H9jQD9ZkmaSto0BZZI5SNXJCqsbreNFlpMuJqnplBhNkl+npBD7bpTpUU+rs9RscxyA+px0BlTj5fkA9Uao2qV+8nryIoXv+1mZtQAoB6DqUZ4VUF+EjqLUqVIJQO0AZa16Nr563ssjmJkA9WqSGpcwCTFJsTchkfYtEpXcJin9VAhlM0n5p9EmttshhZIXzSUiXs/kE9DvNagEoLaAtlU9mQDVEcp7PehbuUmK5IyDbgNQRkBbqp5MgOoGRFkBvRxFR1dTfVfMOCgAZQW06ZQ4e1DNy2p4K0nRKdLiBpCOSpikxmRrQ5oM6b28u0nKJrkvv2uUOnkX7ywtlQDUBdAVlVBWQLmffaeUOqUBqqcSgDoB2l31dAWUmVC11CmrxNlCJQB1A5Sl6tn+FeuQfR3Q31+Inn0vFfGmDz8mKUMRJskgkdaW6RlSvTybSco/+HdIqtgkSRpm2gagvgBVj/K8gNaKSqyX2/3jaiEBw0xFAR6AegBUIZQZ0JXKkD1zJclSHgAtH3IDQH0AWvfy/ICWVkkGoB7UQSVMUmOytSHtDLVUPd1NUm6VeMy8DlARbzvuohKAcgDqeK9nbxTPMx0UQG0fAc6uTQDqHVB91ZMNUJ6iUh1QMY8A76YSgPIA6lT1NIjiGBBVKklC3nZcQxEmySCR1pZ1M2RX9TQxSZlTijtR3nFQEW87nm0C0IEAtat6GgOaWCVuQO0eAc4KqIIiAPUIqFXVkwDo2vNP8OyQVDIeAb4JQAcE1OZeTwqgK18inYj2jINKeNvxZguKMEldk60N6WdI75Q4TFLx6bIjlFs+gr/tePYTAyoBKCegDUK5AXUab9IeEemPAOeS+hIPADoAoK33enL1oC5j9sJKnWZUAlBeQK2qnhRAV1as75lnKnXymCQ9ijBJBom0tsyMIVrVk2SSnlyjnIj2XSwS9G3H2wA0FKBPkqqeNoAanoj2AGpd6uQAtO1gDkAHAJRU9bTqQdeMCp9946DNUuf+8vLyS2XEXvFTfTYHoK1nmwB0CEB7nnDLAKjRw5vIpc795fPzh+cKFPeWT8dzXlJnc2iT4IxgkhqTrQ0xtzTEqifJJBWTdDffU+r8/O0Ewv0X3kl/ypDce/GD+mwGbavlIwA6OKDEqqcVoPQR0Z5S5/03T5efyb/n48+9F96pz3bXNo1KAOoFUFrV0wpQsxPRqnpKnRmSD89VSbz+4gfV2U/FIq5UFZVKAOoHULP3ejoBSn6KaE+pMznXnNfPNrPzUGW2kzXZ7EYRJskgkdaWGZukNR2hrCYpn9t5mDe7aW5R6mwCWnokLkB7+0oAOhygZlVPN0A7D/PUuzobh/ik/9TMtsdiG4BKAtSo6ukIaNegfS+gytuOCzd0Pv/5espnY7Y9FgZnmwB0SEA1b01kB7Tj6pHeUqfytmNlPGlv+bxutrWUmzssJh0TaJU5SENNdke1NoTuY5qEcpqkfNLYzaulTvVtx7UR+cW4Es9Ave3gJwD1CWjfez1ZAF0zHRJtlDrVtx0XNc0EyaTQGSvpOJVSp40qvAFQSYCaVT1dAe30SgtpKkk2L5O1kAOVANQvoGof6gfQtedNOlEmQOnWpGfwszIJk2SQSGvLyCZJ45T4TVI+2exE++/qHOZtx5t9VALQoIC2OSVmQJsDTr13dVq+7ZiGxV/8hHIwB6ABAO2sevIB2jgT7Rtmsn3bMQmL2fdIZ5sANASgXVVPTkCV4nzvQP0gbzt2dUZdgDLJHKShJrujWhti72N0TonVJC0mO3ZEkLs6AegYANU5JT+Adt2vBED1EkJlUEC7q56cPWjHjfMloAefvlcV8TU0NAHQcQDaWfVkBXSltRMtAa28gsb7a2hgkgx+LbRJSj/1Xp7VJBWTmZ1vN0mVV9B4fw0NAB0LoPqqpxdAszNR6vWg1ju6UwB0NIBqb6XzA2g64gRAe6IBaCegJ7wCGn82Hne72EOf3a7K6/Pt2EzS+vq6pxTNQRpqsjuqtSHuPqbLKfFPqvkzmSSamABdz+QlRSFUSgC0pag0NKCZSfpOFH159TtL0ZeJJokmHkDXAehAgGqLSkMDmiq/UPng8pGfse/yilgAXV/3SagQKoUAyvKCeQZAk8vt0gnPL1HgMEnrLYDCJNUbYsZF38tkTyh9KAE6mkl6snMPldcpe75gmQHQdQA6JKC0h454BHQsPeg6AB0YUMOHjvgFdH45u5Ke/hqagQFt5xOAKg1hA9TuVQvMgCZjTc+svu77bceuJmm9A1AmmYM01GR3VGtDGH2MZsieb+HFp5q/0oUcvJWOgn7F72uSOAH1lKIQKkUBavLQEd+AzpOKkve3JDkC6r//BKD6yQGKSmr+I7xgeQg+Aah+Uu/lBwHU7YLl4UxS/fwTF4vkibS2zNCbmDKk9fKdv8tlkkZywbLC5+EG9EcVtTWEGVB61ZML0HFcsFznc/MQAfqjXukbwg1oz0NH/AHqpiCAbk8W0H4awwHa/dARqYDSZG2SlOO7DlAmmfd0rpNWMBoQmsuDjzmhIsq5cDX/ikl6/07FKIm8q1Phc3yA8sEYElDropIToPlLvCRfsKzyKRxQvzQGBdRjUUnNv2KSvnunYpTkXbDc8EeSAB0cRo30DRkCUM6ikpr/eExSwx/pAfVvkkKD2CZ9Qwy9CQmn5KY546KSDJPkH9CmPxoE0NDUGautIb4ANS4qMQN6YHdXp3dANf7IJ6ChcTNVOd7V2jJvgJq+v5sV0PxiJnmVJJ0/8gdoaOxa1HHaEQJQoyfZs1+wHB2VaJIafLYDyqHQJP4ogVGlsNuttbaFy7w0Jlf6nmRvN6nmr9w0F53ysL8bogLa9O9eAQ1AowGFAgGlFpWcAR3i7TOJiIBq/Pt4AbUcVJUJqIeikpq/0oNKBFTn38cBKGstSiSgDUL9Ajq/S71ZTr+YPpFMkta/CzRJ/aSFuB50a8vMm5Bwqj08rK+oxHa5XVqHfyt6VtgFy3r/HhjQkgtSVxjkguWY0CEBbRaVJn7Bsra+6RvQGqKdXMgHNEfUH6B9RaVpX7Csr2/6B1TeBcv2gMba8gpod1FJRqmTJmOT1FLf9GySEpmDNNRkd1R3a/LjvIt5aUxWfzYsKplMqqmLBrStvglAiYAWiPoC1LCo5ArowZW/Sf65t/Tsrxh3tUaGgLbWNwEoGdCY0C2PgPIVldS8K4Deey17ReetKPL7eFBDQNvrmwCUDmiKqD9ANWaeG9DYxh/Les6Dd8kX1PObpBqe662xjpkcEpOUq3KcV70JCSftSxTaikpsJmk3erR07pfDP92uq74JQO0ArRzn+QFtKyqxDTNdqBzX71Ifb8cOaGd9E4BaAprIG6AtRSW+gfrKYT34E5a765sA1B7QrWppySugJyQBSpNrfRMmqTFJaBrTiJP2q+6iksmkmq3+EE9+BDhNlPKRrr4JQF0AzRD1A6j74+/UXBdHgqox2s0GnHzJtb4JQN0AZRlxavnKtaikproA9N5S2YXeW/J7Zb1rfROAOgLaNeLkCKhrUUlNtHIuvRsdeSN9hcKVJXIHymiSGv7oezBJ/YmQt0N9xInHJGUfilVivFhkN7nO7mTyQb5smQ3QdZVPAOoH0ER+AHUqKnVfzfTZlacTRN+gGyQuQJt8AlBvgFaucWIF1OVOJeFPFtHWNwGorx50cSbKC6jD4++EXw9qWN+ESWpM2rbTfsSpO0pbVDJZuJrgYqD+r76vfHXrT3wN1puUj7rqmwCUDdD51twLoNbvVFLzW/Sgt5aO/nQx/+DW00dUYtlkUD7qrG8CUD5ADe+qIwPaZpXsAZ3//q0oeuaf3799+/anV16LIo9XLWuh0/h3ADoAoGZ31dEBbbFKDoDGiL5e3tX5DA1Pd5PUXt+ESTJIxHE7PMFsktIPlVAWk/TpP62urv71+6TWkTeHBlCl/wSgAwM69wCozY0gUoeZtP4IgA4GaKS9CI8ZUJOniwkFVO+PAOhwgFbPRPkAbbu6yQ7QxCQd8fwi7kwG9U2YJHWyO4qhyVuGz3EiWSny08XUrGo3zUVPR9HRAZ5vZ1DfBKCDA5qMifIDqlole0AvJ/chHVywfb4dRQb1TQAaAFDSRXjGrkpzImoDaH5FPfl2ORvVSNP5dwAaBtBK6ZMP0FarRAM0vw3J8m4ke5Ok9e8wScObpFKsJim9aY5QVOq9aW5oQPX+HYCGA9TgQWNUQAk3gkgDtMW/A9CAPWj/bZ90QI1vBBEGqMYfAdDggPYOiVoAajpm7wtQmrT1TYIzgklqTDI332BI1NwkZR8tJ6IEk3Tky6urq99ZSv8Z5EVeWn8EQCUAajAkSgXU8EYQNZEKoC7PqKdJc/rZ8nxaABoI0P4hUTKgZjeCqHksxkE/fa8q4ls+aHItHwFQ/4D2DolaAGpyI4iaRaiLRQjlI5gkg0S4t0MmRpO01mmVDEySm6iAUspHADQUoG1DovaA9o7ZCwG0v3wEQAUA2jYk6gBo340gMgA1KB8BUBGA6odEXQDtGbMXcV+8SfkIJkmd7I7ytR3ah0RtTNKa5kR0GJNEkVH5CIBKAbRtSNQe0M4xe3XtwwOq80cAVDCgLUOiDoB2jdmrKw8MqB2VAHRQQPVDoi6AdtwIoq56cJNELx/BJBkkwr0dGuIzSemnQqiDSdpfXl5+qfLz/R9+oJltB6hZXwlABQC6NecFtO1GEDKg+8vn5w/PLVB8eO7FBND9b/5ufv/NxWwrQA0P5gBUAKC1RzhxANpilaiAfv52AuH+C+/kP8cdZwLow3On4x/2UlYNG1jIsHwEQIUBWh0S5QFUa5WogN5/83T5mU2kVC6IpYsMaOekdRo9MgdpqMnuKF/boS42k5RN6qySuspeQM/Piw4zUwro3ov/fa5+amous/omABUIaO3tNQyA6sbs1XX2AJqcgs5rJ6EZoMtxF5od/udPxaK107l8BEDDABojykFlK6DJYV5doy2gSZdqfaB3pRKAhgKU8gQns0mVUHWFlof4FM2MXpPFKDJ5HfdiEibJIBHu7dCqrTmbSdKO2RMzK0xSSeK8YpIA6CEENOlEWQFVrRItM3WYKQc043bfZpgpER+gs8ayASjLdujS1pOsgDZOREmZqQP1+eBn8vn524sDfyBAZ81lA1CW7dCpJygPtTd4FaILoGVNszie56PzyezTXb/XJR6TpMOTTeYgDTXZHeVxU2i0NTcH1GiyndAQFyzzAOo3RSFUCgU0ORFlBXRleoDO/KYohEqxgM77HzFGm5waoL5T9EHaxrVC83JqtID2P2LMfsy+uppQ98UTqNSYpBlXJh5NkoriNV1q9YAC2nQJgk1SFm04Zm/+vng7k+SjgY6Azvgy4Qa0Qpp1avkS/nTBqkxA5/WLR9wBXZsIoDPGTJgA3Win0im1Rb8qEtDaxSMMgKZnok6Z9aZsJidAWTNxBbQ4ONutjBCdr0YWoEZvXSABKuO+eBeTNBsoxV5AKWSyqehRmzkNnEgpuxfRdkyqKxgZoIOl2AGowcHcszQjAMFy4R6zV5c/KkCH47MF0BC9Zruyv5TAgHKP2atLHxGgvsfma2oeQyWhWVWQc42aWMfs1YWPyCT5yMTIJLUDMIwTsQoeMrXOMXsZJsk/oDMvmfQC2t07AdBMXWP2hwTQmZ9MOgDdMDhwAtBcW+1j9ocDUF+ZtAJqdlYHQAu1j9nLAJQmskkKkSREU+WGT4EmiSapg5+Qi3jG7NWljgDQWYgUIbrMX+U9JUA3QyQIWUosoP5M0sCn+2Jsz8hMUibde2tkmCRfgM7Iywag3lfWFd18Ns6kAZ3Rlw1Ava+sM7oxZj9lQGcWywag3lfWHV1aJVGA0mRmkmCPxqmtuUCTRBNG5yet/nfNTwHQWYjEIBYZ3AgyekBnIfKCuGRfVFKXJNQkVY/vMEk2waFT25JlkrgBtV82APW+MjNAt6YLqHJ8B6A2wcFTK16sNEFAnZYNQL2vzDA6t0oyAKXJoHwEjV9WL1xQFyIP0FmIjCA/mh6gKB9NSUYPbxoVoOBzYiLfCKIuQJhJcl82TJL3lZGit54QYZKYAGVYNgD1vjJa9BOkG0FkAzpjWDYA9b4ycmoTAbTt/BOA2gQLSi2/umns46DwR5PVFuElyervigEUfE5YhDeCqL8qBtAQeUCDybiopP6iFEBnIfKAhtPW1qjHQfmWDYMoX6wAAAXUSURBVJPkfWV2qZkVlWS6+O7zTwBqEywvNaMbQUQC2uOPAKhNsMDUTJ4uJhJQ1mUDUO8rs07N4I0gEsdBQ2QABdIIXfwsRAZQGPUXldTfCA4oOtBDpd6ikvoLwQENsX4ooHqKSmp4aJPEvmyYJO8rc0xNfbqYaBfPv2wA6n1lrql1FZWEAeph2QDU+8pcU+t6upgsQH0sG4B6X5kzoB1FJVHjoCFWDYlQe1FJjQwHKPg8zGotKqmBwQAFn4ddwgENsV5IkHSvrBE0Dupt2TBJ3lfmbpIy6YpKUlz8zNuyAaj3lXEBqisqCQGUdIAHoDbBglNbqFlUEgKox2UDUO8r4wO0WVQSMQ46C7BOSKYaRSU1IIiLh6BCalFJ/R6AQmGlFJXUrwEoFFj1opL6bRCTJDhacGq0YMGpNSXNxQuOFpwaLVhwag1VikoAtCdacGq0YMGpabQFQA2jBadGCxacmk5bngGFIDcVRSV1PgCFZCgvKqmzASgkRFlRSZ0LQCEpSs28OhMmKeDK+KJHb5JSxYTCxfdEC06NFiw4tXZtzQFoT7Tg1GjBglMjRQPQgCvjiwagEBREABQSLQAKiRYAhUQLJingyviiYZL8ZiEnWnBqtGDBqZGiAWjAlfFFA1C/WciJFpwaLVhwaqRomCRItAAoJFoAFBItAAqJFkxSwJXxRcMk+c1CTrTg1GjBglMjRQPQgCvjiwagfrOQEy04NVqw4NRI0UyAPjWVaMGp0YIFp0aKBqABV8YXDUD9ZiEnWnBqtGDBqZGiAWjAlfFFA1AICiIACokWAIVEC4BCogVAIdFiAnRveXn5JUL8/R9+YBa472vBc33SY2yINmcpDXHdITyA7i2fjhM3T/vhuRfN0t5fPh8He1jwXJ/0GBuizVlKQ1x3CA+gWcJ7xqnEf4RmsZ+/nSx4/4V3uBc81yc9xoZoc5bSENcdwgTo/TfPJ4s2zfr+m6cNN10cWX6yLniuT3qMDdHmLKQhzjuE1SRdN+/MTf+2s5wfnjPcr+YLLqVLeowN0eYsoSGuO4QP0OQMwjzYLO3khGdOOncjbg9d0mNsiDZnEQ1x3SFsgFLOyMXsV13SY2yINmcZDXHdIY6AJgMDKfNGf61ltJAjYyXpUTekmrO0htjukEJMPeh1ytFkTtgc2Sn5ee4Fp9IlPcaGaHOW0hDXHcI1Dmq+5bNf8DM6Q9oeuqTH2BBtzmIa4rhDuIaZaH+t5mlTx7cJ20OX9Bgbos1ZTkPcdggToOmZzPKyj/6BWiGkdDzNpMfYEG3OchritkNwsQgkXAAUEi0ACokWAIVEC4BCogVAIdECoJBoAVAefXbl6SiKnvnpnfzngwvRqWzq3tKj9dD4q1LH7tRid7MZ8/nd6KuDpC1fAJRF/7OUE3f0ajbj3lLBWj+gi9jdKEcVgBYCoByKwfrKb2P0PnmtRO3I00d+lk41AE314NVjd8rfLmPj5TySEg5ACwFQBj14tThGH1zIUIv5u5Uz1gtoJXY3Ohml0QC0EABl0O4Cp/979lfJPzFgD17NOsNeQCuxu9H3M8IBaCEA6q6i26zocjznctat9gJaid2NTt1NTxIAaCEA6q7q+WRlzt3saN0HaDU2BjRm9asAdCEA6q4Ctt3UmD86z4/5D15NO9Y+QKuxCaDp4R6AFgKg7moAWg4kJZRVAL2bzjxV/Z16bAJo/PEoAC0FQN1VPQdNcby3VBnm7AG0FpsCmozbA9BCAJRBFRef4pj/nIHbc4ivxaaAxr9RjjtBAJRB+RlkorsxjuWPycG6B9B6bAZo7JNOAtBcAJRD8bH72V/G//7m9Sg9gSwP37Hf6Qa0HrtbHP8jAJoLgLLoVnEmeeSNO8WgZn4VSHmSWcxNVQBaj90tS/EANBcA5dHBlZMxgidjPOdFWWieXZ3UCagSWwAa0wpAMwFQSLQAKCRaABQSLQAKiRYAhUQLgEKiBUAh0QKgkGgBUEi0ACgkWgAUEq3/BwMWpQxFfRPDAAAAAElFTkSuQmCC" /><!-- --></p>
+<pre class="r"><code>png(filename = 
+      &quot;../../results/figures/galtan_galtan_salience_nonextrp.png&quot;,
+    units = &quot;cm&quot;,
+    width = 29.7,height=21.0,res = 600)
+p1
+dev.off()</code></pre>
+<pre><code>## png 
+##   2</code></pre>
+</div>
 <div id="marginal-effects-1" class="section level3">
 <h3>marginal effects</h3>
 <pre class="r"><code>emtrends(mod6.galtan,
@@ -1336,13 +2191,13 @@ if this dimension is salient in the party’s public stance.</p>
          specs=&quot;galtan_salience.z.gmc&quot;,
          at=list(galtan_salience.z.gmc=c(-1,0,1)),infer=c(T,T))</code></pre>
 <pre><code>##  galtan_salience.z.gmc galtan.z.gmc.trend     SE  df asymp.LCL asymp.UCL
-##                     -1            0.12386 0.0639 Inf  -0.00138    0.2491
-##                      0            0.00731 0.0327 Inf  -0.05673    0.0713
-##                      1           -0.10924 0.0356 Inf  -0.17899   -0.0395
+##                     -1            -0.0537 0.0252 Inf    -0.103  -0.00425
+##                      0            -0.0537 0.0252 Inf    -0.103  -0.00425
+##                      1            -0.0537 0.0252 Inf    -0.103  -0.00425
 ##  z.ratio p.value
-##    1.938  0.0526
-##    0.224  0.8230
-##   -3.070  0.0021
+##   -2.128  0.0333
+##   -2.128  0.0333
+##   -2.128  0.0333
 ## 
 ## Results are averaged over the levels of: gndr.c, minority.c 
 ## Confidence level used: 0.95</code></pre>
@@ -1397,9 +2252,9 @@ exist)?</p>
 ## (Intercept)           -1.28921    0.10004 -12.886  &lt; 2e-16 ***
 ## gndr.c                -0.31017    0.04046  -7.666 1.78e-14 ***
 ## age10.c               -0.55518    0.01350 -41.127  &lt; 2e-16 ***
-## minority.c            -0.28606    0.10420  -2.745  0.00605 ** 
+## minority.c            -0.28605    0.10420  -2.745  0.00605 ** 
 ## lrecon.z.gmc          -0.01847    0.02437  -0.758  0.44852    
-## lrecon_salience.z.gmc  0.01774    0.03369   0.527  0.59839    
+## lrecon_salience.z.gmc  0.01774    0.03369   0.527  0.59838    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
@@ -1446,13 +2301,13 @@ exist)?</p>
 ## 
 ## Random effects:
 ##  Groups  Name         Variance  Std.Dev.
-##  cntry   (Intercept)  0.1158766 0.34041 
-##  cntry.1 lrecon.z.gmc 0.0001863 0.01365 
+##  cntry   (Intercept)  0.1158762 0.34041 
+##  cntry.1 lrecon.z.gmc 0.0001862 0.01365 
 ## Number of obs: 21374, groups:  cntry, 20
 ## 
 ## Fixed effects:
 ##                                    Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)                        -1.30106    0.10020 -12.985  &lt; 2e-16 ***
+## (Intercept)                        -1.30105    0.10020 -12.984  &lt; 2e-16 ***
 ## gndr.c                             -0.30729    0.04050  -7.588 3.25e-14 ***
 ## age10.c                            -0.55290    0.01352 -40.887  &lt; 2e-16 ***
 ## minority.c                         -0.28235    0.10462  -2.699  0.00696 ** 
@@ -1482,7 +2337,7 @@ exist)?</p>
 ##                      1             0.0805 0.0432 Inf  -0.00427    0.1652
 ##  z.ratio p.value
 ##   -2.690  0.0071
-##   -0.753  0.4515
+##   -0.753  0.4516
 ##    1.861  0.0627
 ## 
 ## Results are averaged over the levels of: gndr.c, minority.c 
@@ -1525,20 +2380,20 @@ exist)?</p>
 ## 
 ## Random effects:
 ##  Groups  Name                               Variance  Std.Dev.
-##  cntry   (Intercept)                        0.1158171 0.34032 
-##  cntry.1 lrecon.z.gmc                       0.0001315 0.01147 
-##  cntry.2 lrecon_salience.z.gmc              0.0019123 0.04373 
+##  cntry   (Intercept)                        0.1158174 0.34032 
+##  cntry.1 lrecon.z.gmc                       0.0001314 0.01146 
+##  cntry.2 lrecon_salience.z.gmc              0.0019122 0.04373 
 ##  cntry.3 lrecon.z.gmc:lrecon_salience.z.gmc 0.0000000 0.00000 
 ## Number of obs: 21374, groups:  cntry, 20
 ## 
 ## Fixed effects:
 ##                                    Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)                        -1.30063    0.10020 -12.981  &lt; 2e-16 ***
+## (Intercept)                        -1.30063    0.10019 -12.981  &lt; 2e-16 ***
 ## gndr.c                             -0.30632    0.04054  -7.555 4.19e-14 ***
 ## age10.c                            -0.55353    0.01358 -40.752  &lt; 2e-16 ***
-## minority.c                         -0.28081    0.10468  -2.683  0.00731 ** 
+## minority.c                         -0.28080    0.10468  -2.682  0.00731 ** 
 ## lrecon.z.gmc                       -0.01867    0.02509  -0.744  0.45686    
-## lrecon_salience.z.gmc               0.01445    0.04104   0.352  0.72474    
+## lrecon_salience.z.gmc               0.01445    0.04104   0.352  0.72472    
 ## lrecon.z.gmc:lrecon_salience.z.gmc  0.09707    0.03647   2.661  0.00778 ** 
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
@@ -1566,10 +2421,209 @@ exist)?</p>
 ##  z.ratio p.value
 ##   -2.600  0.0093
 ##   -0.744  0.4569
-##    1.781  0.0749
+##    1.781  0.0750
 ## 
 ## Results are averaged over the levels of: gndr.c, minority.c 
 ## Confidence level used: 0.95</code></pre>
+</div>
+</div>
+<div id="exclude-all-random-slopes" class="section level2">
+<h2>exclude all random slopes</h2>
+<pre class="r"><code>mod7.lrecon&lt;-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+lrecon_salience.z.gmc+
+          lrecon.z.gmc:lrecon_salience.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link=&quot;logit&quot;),weights = anweight,
+        control = glmerControl(optimizer=&quot;bobyqa&quot;,
+                               optCtrl=list(maxfun=2e6)))</code></pre>
+<pre><code>## Warning in eval(family$initialize, rho): non-integer #successes in a binomial
+## glm!</code></pre>
+<pre class="r"><code>summary(mod7.lrecon)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: childlessness ~ gndr.c + age10.c + minority.c + lrecon.z.gmc +  
+##     lrecon_salience.z.gmc + lrecon.z.gmc:lrecon_salience.z.gmc +  
+##     (1 | cntry)
+##    Data: exdat
+## Weights: anweight
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;, optCtrl = list(maxfun = 2e+06))
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##  15069.8  15133.6  -7526.9  15053.8    21366 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.7978 -0.4402 -0.2246  0.2407 12.9224 
+## 
+## Random effects:
+##  Groups Name        Variance Std.Dev.
+##  cntry  (Intercept) 0.1159   0.3404  
+## Number of obs: 21374, groups:  cntry, 20
+## 
+## Fixed effects:
+##                                    Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)                        -1.30136    0.10017 -12.992  &lt; 2e-16 ***
+## gndr.c                             -0.30738    0.04049  -7.592 3.14e-14 ***
+## age10.c                            -0.55294    0.01352 -40.912  &lt; 2e-16 ***
+## minority.c                         -0.28317    0.10434  -2.714  0.00665 ** 
+## lrecon.z.gmc                       -0.01890    0.02456  -0.770  0.44153    
+## lrecon_salience.z.gmc               0.02303    0.03427   0.672  0.50159    
+## lrecon.z.gmc:lrecon_salience.z.gmc  0.09907    0.03549   2.792  0.00525 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) gndr.c ag10.c mnrty. lrcn.. lrc_..
+## gndr.c       0.014                                   
+## age10.c      0.103  0.011                            
+## minority.c   0.490  0.003  0.092                     
+## lrecn.z.gmc  0.039  0.022 -0.002  0.077              
+## lrcn_slnc.. -0.011 -0.009 -0.072 -0.017 -0.314       
+## lrcn.z.:_.. -0.045  0.022  0.051  0.011 -0.014  0.073</code></pre>
+<pre class="r"><code>anova(mod7.lrecon,mod6.lrecon)</code></pre>
+<pre><code>## Data: exdat
+## Models:
+## mod7.lrecon: childlessness ~ gndr.c + age10.c + minority.c + lrecon.z.gmc + lrecon_salience.z.gmc + lrecon.z.gmc:lrecon_salience.z.gmc + (1 | cntry)
+## mod6.lrecon: childlessness ~ gndr.c + age10.c + minority.c + lrecon.z.gmc + lrecon_salience.z.gmc + lrecon.z.gmc:lrecon_salience.z.gmc + (lrecon.z.gmc + lrecon_salience.z.gmc + lrecon.z.gmc:lrecon_salience.z.gmc || cntry)
+##             npar   AIC   BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## mod7.lrecon    8 15070 15134 -7526.9    15054                     
+## mod6.lrecon   11 15076 15163 -7526.8    15054 0.2503  3     0.9691</code></pre>
+<div id="plot-1" class="section level3">
+<h3>Plot</h3>
+<pre class="r"><code>p&lt;-
+  emmip(mod7.lrecon, lrecon_salience.z.gmc ~ lrecon.z.gmc,
+        at=list(lrecon_salience.z.gmc = c(-1,0,1),
+                #minority.c = c(-0.5,0.5),
+                lrecon.z.gmc=seq(from=-2,to=2,by=0.02)),
+        plotit=F,CIs=TRUE,type=&quot;response&quot;)
+
+head(p)</code></pre>
+<pre><code>##   lrecon_salience.z.gmc lrecon.z.gmc      yvar         SE  df       LCL
+## 1                    -1        -2.00 0.2136533 0.02164808 Inf 0.1742802
+## 2                     0        -2.00 0.1857051 0.01670396 Inf 0.1551634
+## 3                     1        -2.00 0.1606659 0.01883926 Inf 0.1270726
+## 4                    -1        -1.98 0.2132571 0.02153643 Inf 0.1740792
+## 5                     0        -1.98 0.1856480 0.01666970 Inf 0.1551653
+## 6                     1        -1.98 0.1608823 0.01878446 Inf 0.1273720
+##         UCL tvar  xvar
+## 1 0.2591300   -1 -2.00
+## 2 0.2206882    0 -2.00
+## 3 0.2010943    1 -2.00
+## 4 0.2584927   -1 -1.98
+## 5 0.2205557    0 -1.98
+## 6 0.2011763    1 -1.98</code></pre>
+<pre class="r"><code>#p$ethnic_minority=
+#  ifelse(p$minority.c==(-0.5),
+#         &quot;Ethnic majority&quot;,&quot;Ethnic minority&quot;)
+p$lrecon_salience&lt;-p$tvar
+levels(p$lrecon_salience)</code></pre>
+<pre><code>## [1] &quot;-1&quot; &quot;0&quot;  &quot;1&quot;</code></pre>
+<pre class="r"><code>p2&lt;-ggplot(p,aes(y=yvar,x=xvar,color=lrecon_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab(&quot;Left-Right Economic&quot;)+
+  ylab(&quot;P(Childlessness)&quot;)
+p2</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<pre class="r"><code>png(filename = 
+      &quot;../../results/figures/lrecon_lrecon_salience.png&quot;,
+    units = &quot;cm&quot;,
+    width = 20.0,height=10.0,res = 300)
+p2
+dev.off()</code></pre>
+<pre><code>## png 
+##   2</code></pre>
+</div>
+<div id="non-extrapolated-plot" class="section level3">
+<h3>Non-extrapolated plot</h3>
+<pre class="r"><code>quantile(exdat$lrecon_salience.z.gmc,
+         seq(0,1,0.10))</code></pre>
+<pre><code>##           0%          10%          20%          30%          40%          50% 
+## -3.057393414 -0.841349439 -0.474049770 -0.094938253 -0.009809614  0.116376710 
+##          60%          70%          80%          90%         100% 
+##  0.229073588  0.304743209  0.511737146  0.665036770  1.155400162</code></pre>
+<pre class="r"><code>prop.table(table(exdat$lrecon_salience.z.gmc&gt;1))</code></pre>
+<pre><code>## 
+##       FALSE        TRUE 
+## 0.993075699 0.006924301</code></pre>
+<pre class="r"><code>prop.table(table(exdat$galtan_salience.z.gmc&gt;1))</code></pre>
+<pre><code>## 
+##    FALSE     TRUE 
+## 0.899083 0.100917</code></pre>
+<pre class="r"><code>min.low&lt;-
+  min(exdat[exdat$lrecon_salience.z.gmc&lt;=(-0.8),
+            &quot;lrecon.z.gmc&quot;])
+max.low&lt;-
+  max(exdat[exdat$lrecon_salience.z.gmc&lt;=(-0.8),
+            &quot;lrecon.z.gmc&quot;])
+
+
+p$filter.low&lt;-
+  ifelse(p$lrecon_salience.z.gmc==(-1) &amp;
+           (p$lrecon.z.gmc&lt;min.low | 
+              p$lrecon.z.gmc&gt;max.low),0,1)
+
+table(p$filter.low)</code></pre>
+<pre><code>## 
+##   0   1 
+##  39 564</code></pre>
+<pre class="r"><code>min.mid&lt;-
+  min(exdat[exdat$lrecon_salience.z.gmc&gt;(-0.8) |
+              exdat$lrecon_salience.z.gmc&lt;(0.8),
+            &quot;lrecon.z.gmc&quot;])
+max.mid&lt;-
+  max(exdat[exdat$lrecon_salience.z.gmc&gt;(-0.8) |
+              exdat$lrecon_salience.z.gmc&lt;(0.8),
+            &quot;lrecon.z.gmc&quot;])
+
+
+p$filter.mid&lt;-
+  ifelse(p$lrecon_salience.z.gmc==(0) &amp;
+           (p$lrecon.z.gmc&lt;min.mid | 
+              p$lrecon.z.gmc&gt;max.mid),0,1)
+
+table(p$filter.mid)</code></pre>
+<pre><code>## 
+##   1 
+## 603</code></pre>
+<pre class="r"><code>min.high&lt;-
+  min(exdat[exdat$lrecon_salience.z.gmc&gt;=(0.8) ,
+            &quot;lrecon.z.gmc&quot;])
+max.high&lt;-
+  max(exdat[exdat$lrecon_salience.z.gmc&gt;=(0.8) ,
+            &quot;lrecon.z.gmc&quot;])
+
+
+p$filter.high&lt;-
+  ifelse(p$lrecon_salience.z.gmc==(1) &amp;
+           (p$lrecon.z.gmc&lt;min.high | 
+              p$lrecon.z.gmc&gt;max.high),0,1)
+
+table(p$filter.high)</code></pre>
+<pre><code>## 
+##   0   1 
+##  39 564</code></pre>
+<pre class="r"><code>p.ex&lt;-p[p$filter.low!=0 &amp; p$filter.mid!=0 &amp; p$filter.high!=0,]
+
+
+p1&lt;-ggplot(p.ex,aes(y=yvar,x=xvar,color=lrecon_salience))+
+  geom_point()+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab(&quot;Left-Right Economic&quot;)+
+  ylab(&quot;P(Childlessness)&quot;)
+p1</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<pre class="r"><code>png(filename = 
+      &quot;../../results/figures/lrecon_lrecon_salience_nonextrp.png&quot;,
+    units = &quot;cm&quot;,
+    width = 20.0,height=10.0,res = 300)
+p1
+dev.off()</code></pre>
+<pre><code>## png 
+##   2</code></pre>
 </div>
 </div>
 </div>
@@ -3581,24 +4635,39 @@ print(sinf,locale=F)</code></pre>
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] vjihelpers_0.0.0.9000 dplyr_1.0.9           rio_0.5.29           
-## [4] emmeans_1.7.3         lme4_1.1-29           Matrix_1.4-1         
+##  [1] Hmisc_4.7-0           Formula_1.2-4         survival_3.3-1       
+##  [4] lattice_0.20-45       tibble_3.1.6          MetBrewer_0.2.0      
+##  [7] ggplot2_3.3.5         vjihelpers_0.0.0.9000 dplyr_1.0.9          
+## [10] rio_0.5.29            emmeans_1.7.3         lme4_1.1-29          
+## [13] Matrix_1.4-1         
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] tidyselect_1.1.2  xfun_0.30         bslib_0.3.1       purrr_0.3.4      
-##  [5] splines_4.2.0     haven_2.5.0       lattice_0.20-45   generics_0.1.2   
-##  [9] vctrs_0.4.1       htmltools_0.5.2   yaml_2.3.5        utf8_1.2.2       
-## [13] rlang_1.0.2       jquerylib_0.1.4   nloptr_2.0.0      pillar_1.7.0     
-## [17] foreign_0.8-82    glue_1.6.2        readxl_1.4.0      lifecycle_1.0.1  
-## [21] stringr_1.4.0     cellranger_1.1.0  zip_2.2.0         mvtnorm_1.1-3    
-## [25] evaluate_0.15     knitr_1.39        forcats_0.5.1     fastmap_1.1.0    
-## [29] curl_4.3.2        fansi_1.0.3       Rcpp_1.0.8.3      xtable_1.8-4     
-## [33] jsonlite_1.8.0    hms_1.1.1         digest_0.6.29     stringi_1.7.6    
-## [37] openxlsx_4.2.5    grid_4.2.0        cli_3.3.0         tools_4.2.0      
-## [41] magrittr_2.0.3    sass_0.4.1        tibble_3.1.6      crayon_1.5.1     
-## [45] pkgconfig_2.0.3   MASS_7.3-56       ellipsis_0.3.2    data.table_1.14.2
-## [49] estimability_1.3  minqa_1.2.4       rmarkdown_2.14    rstudioapi_0.13  
-## [53] R6_2.5.1          boot_1.3-28       nlme_3.1-157      compiler_4.2.0</code></pre>
+##  [1] sass_0.4.1          jsonlite_1.8.0      splines_4.2.0      
+##  [4] bslib_0.3.1         highr_0.9           latticeExtra_0.6-29
+##  [7] cellranger_1.1.0    yaml_2.3.5          pillar_1.7.0       
+## [10] backports_1.4.1     glue_1.6.2          digest_0.6.29      
+## [13] RColorBrewer_1.1-3  checkmate_2.1.0     minqa_1.2.4        
+## [16] colorspace_2.0-3    htmltools_0.5.2     pkgconfig_2.0.3    
+## [19] haven_2.5.0         purrr_0.3.4         xtable_1.8-4       
+## [22] mvtnorm_1.1-3       scales_1.2.0        jpeg_0.1-9         
+## [25] openxlsx_4.2.5      htmlTable_2.4.0     farver_2.1.0       
+## [28] generics_0.1.2      ellipsis_0.3.2      withr_2.5.0        
+## [31] nnet_7.3-17         cli_3.3.0           magrittr_2.0.3     
+## [34] crayon_1.5.1        readxl_1.4.0        estimability_1.3   
+## [37] evaluate_0.15       fansi_1.0.3         nlme_3.1-157       
+## [40] MASS_7.3-56         forcats_0.5.1       foreign_0.8-82     
+## [43] tools_4.2.0         data.table_1.14.2   hms_1.1.1          
+## [46] lifecycle_1.0.1     stringr_1.4.0       munsell_0.5.0      
+## [49] cluster_2.1.3       zip_2.2.0           compiler_4.2.0     
+## [52] jquerylib_0.1.4     rlang_1.0.2         grid_4.2.0         
+## [55] nloptr_2.0.0        rstudioapi_0.13     htmlwidgets_1.5.4  
+## [58] labeling_0.4.2      base64enc_0.1-3     rmarkdown_2.14     
+## [61] boot_1.3-28         gtable_0.3.0        curl_4.3.2         
+## [64] R6_2.5.1            gridExtra_2.3       knitr_1.39         
+## [67] fastmap_1.1.0       utf8_1.2.2          stringi_1.7.6      
+## [70] Rcpp_1.0.8.3        vctrs_0.4.1         rpart_4.1.16       
+## [73] png_0.1-7           tidyselect_1.1.2    xfun_0.30          
+## [76] coda_0.19-4</code></pre>
 </div>
 </div>
 </div>
