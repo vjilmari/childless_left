@@ -35,7 +35,6 @@ library(ggplot2)
 
 ```{r}
 source("../custom_functions.R")
-source("../modglmer_logit.R")
 ```
 
 ## Data
@@ -70,6 +69,28 @@ fdat$West_vs_post_comm<-
 table(fdat$West_vs_post_comm,useNA="always")
 ```
 
+## Random effect tests
+
+This script prints the random effect models that were significant
+
+```{r}
+varnames<-
+  names(fdat)[which(names(fdat)=="lrgen"):
+              which(names(fdat)=="corrupt_salience")]
+
+
+for (i in 1:length(varnames)){
+  MC1<-import(paste0(getwd(),"/",varnames[i],"/mod3_MC.xlsx"))
+  MC2<-import(paste0(getwd(),"/",varnames[i],"/mod4_MC.xlsx"))
+  if (MC1[2,"Pr..Chisq."]<.05 |
+      MC2[2,"Pr..Chisq."]<.05) {
+    print(varnames[i])
+  }
+
+}
+
+```
+
 ## Data exclusions
 
 ```{r}
@@ -79,6 +100,8 @@ exdat<-fdat %>%
                 gndr.c,age10.c,
                 minority.c,
                 West_vs_post_comm,
+                deregulation.z,
+                redistribution.z,
                 international_security.z,
                 antielite_salience.z,
                 cntry,anweight) %>%
@@ -92,7 +115,9 @@ exdat<-fdat %>%
 exdat<-
   group_mean_center(
     data=exdat,group.var="cntry",
-    vars=c("international_security.z",
+    vars=c("deregulation.z",
+          "redistribution.z",
+           "international_security.z",
            "antielite_salience.z"),
     grand.init = F)
 
@@ -100,6 +125,189 @@ exdat<-
 
 
 # Analysis 
+
+## deregulation
+
+### Fixed main effect
+
+```{r}
+mod2.deregulation<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          deregulation.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+summary(mod2.deregulation)
+```
+
+### Random main effect
+
+```{r}
+mod3.deregulation<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          deregulation.z.gmc+
+          (deregulation.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod3.deregulation)
+
+anova(mod2.deregulation,mod3.deregulation)
+```
+
+### West vs. post-communist main effect
+
+```{r}
+mod4.deregulation<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          West_vs_post_comm+
+          deregulation.z.gmc+
+          (deregulation.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod4.deregulation)
+
+anova(mod3.deregulation,mod4.deregulation)
+```
+
+### West vs. post-communist x deregulation interaction
+
+```{r}
+mod5.deregulation<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          West_vs_post_comm+
+          deregulation.z.gmc+
+          West_vs_post_comm:deregulation.z.gmc+
+          (deregulation.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod5.deregulation)
+getFE_glmer(mod5.deregulation)
+getVC(mod5.deregulation)
+
+anova(mod4.deregulation,mod5.deregulation)
+```
+
+#### Marginal effects
+
+```{r}
+emtrends(mod5.deregulation,
+         var="deregulation.z.gmc",
+         specs="West_vs_post_comm",
+         at=list(West_vs_post_comm=c(-0.5,0.5)),infer=c(T,T))
+
+emtrends(mod5.deregulation,
+         var="deregulation.z.gmc",
+         specs="West_vs_post_comm",
+         at=list(West_vs_post_comm=c(-0.5,0.5)),infer=c(T,T),
+         regrid="response")
+```
+
+
+## redistribution
+
+### Fixed main effect
+
+```{r}
+mod2.redistribution<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          redistribution.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+summary(mod2.redistribution)
+```
+
+### Random main effect
+
+```{r}
+mod3.redistribution<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          redistribution.z.gmc+
+          (redistribution.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod3.redistribution)
+
+anova(mod2.redistribution,mod3.redistribution)
+```
+
+### Random main effect without correlation
+
+```{r}
+mod3.redistribution<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          redistribution.z.gmc+
+          (redistribution.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod3.redistribution)
+
+anova(mod2.redistribution,mod3.redistribution)
+```
+
+### West vs. post-communist main effect
+
+```{r}
+mod4.redistribution<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          West_vs_post_comm+
+          redistribution.z.gmc+
+          (redistribution.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod4.redistribution)
+
+anova(mod3.redistribution,mod4.redistribution)
+```
+
+### West vs. post-communist x redistribution interaction
+
+```{r}
+mod5.redistribution<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          West_vs_post_comm+
+          redistribution.z.gmc+
+          West_vs_post_comm:redistribution.z.gmc+
+          (redistribution.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod5.redistribution)
+getFE_glmer(mod5.redistribution)
+getVC(mod5.redistribution)
+
+anova(mod4.redistribution,mod5.redistribution)
+```
+
+#### Marginal effects
+
+```{r}
+emtrends(mod5.redistribution,
+         var="redistribution.z.gmc",
+         specs="West_vs_post_comm",
+         at=list(West_vs_post_comm=c(-0.5,0.5)),infer=c(T,T))
+
+emtrends(mod5.redistribution,
+         var="redistribution.z.gmc",
+         specs="West_vs_post_comm",
+         at=list(West_vs_post_comm=c(-0.5,0.5)),infer=c(T,T),
+         regrid="response")
+```
+
+
 
 ## international_security
 
@@ -111,7 +319,9 @@ mod2.international_security<-
           international_security.z.gmc+
           (1|cntry),
         data=exdat,
-        family=binomial(link="logit"),weights = anweight)
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod2.international_security)
 ```
 
@@ -121,10 +331,27 @@ summary(mod2.international_security)
 mod3.international_security<-
   glmer(childlessness~gndr.c+age10.c+minority.c+
           international_security.z.gmc+
+          (international_security.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod3.international_security)
+
+anova(mod2.international_security,mod3.international_security)
+```
+
+### Random main effect without correlation
+
+```{r}
+mod3.international_security<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          international_security.z.gmc+
           (international_security.z.gmc||cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod3.international_security)
 
 anova(mod2.international_security,mod3.international_security)
@@ -140,7 +367,8 @@ mod4.international_security<-
           (international_security.z.gmc||cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod4.international_security)
 
 anova(mod3.international_security,mod4.international_security)
@@ -159,6 +387,8 @@ mod5.international_security<-
         family=binomial(link="logit"),weights = anweight,
         control = glmerControl(optimizer="bobyqa"))
 summary(mod5.international_security)
+getFE_glmer(mod5.international_security)
+getVC(mod5.international_security)
 
 anova(mod4.international_security,mod5.international_security)
 ```
@@ -178,30 +408,6 @@ emtrends(mod5.international_security,
          regrid="response")
 ```
 
-#### Plot
-
-```{r}
-
-preds.mod5.international_security<-
-  predict(mod5.international_security,re.form=NULL)
-
-plot.dat<-
-  data.frame('logit_childlessness'=preds.mod5.international_security,
-             'West_vs_Post_Communists'=
-               ifelse(exdat$West_vs_post_comm==-0.5,"Western","Post-Communist"),
-             'international_security'=exdat$international_security.z.gmc,
-             'Country'=exdat$cntry,
-             'Childlessness'=exdat$childlessness)
-
-ggplot(plot.dat,aes(y=logit_childlessness,
-                    x=international_security,
-                    color=West_vs_Post_Communists,
-                    fill=West_vs_Post_Communists))+
-  geom_smooth(method="lm")+
-  ylab("logit p(Childlessness)")+
-  xlab("Favors versus opposes country troop deployment")
-```
-
 ## antielite_salience
 
 ### Fixed main effect
@@ -212,8 +418,26 @@ mod2.antielite_salience<-
           antielite_salience.z.gmc+
           (1|cntry),
         data=exdat,
-        family=binomial(link="logit"),weights = anweight)
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod2.antielite_salience)
+```
+
+### Random main effect
+
+```{r}
+mod3.antielite_salience<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          antielite_salience.z.gmc+
+          (antielite_salience.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod3.antielite_salience)
+
+anova(mod2.antielite_salience,mod3.antielite_salience)
 ```
 
 ### Random main effect
@@ -225,7 +449,8 @@ mod3.antielite_salience<-
           (antielite_salience.z.gmc||cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod3.antielite_salience)
 
 anova(mod2.antielite_salience,mod3.antielite_salience)
@@ -241,7 +466,8 @@ mod4.antielite_salience<-
           (antielite_salience.z.gmc||cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod4.antielite_salience)
 
 anova(mod3.antielite_salience,mod4.antielite_salience)
@@ -258,8 +484,11 @@ mod5.antielite_salience<-
           (antielite_salience.z.gmc||cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod5.antielite_salience)
+getFE_glmer(mod5.antielite_salience)
+getVC(mod5.antielite_salience)
 
 anova(mod4.antielite_salience,mod5.antielite_salience)
 ```
@@ -280,29 +509,6 @@ emtrends(mod5.antielite_salience,
 ```
 
 
-#### Plot
-
-```{r}
-
-preds.mod5.antielite_salience<-
-  predict(mod5.antielite_salience,re.form=NULL)
-
-plot.dat<-
-  data.frame('logit_childlessness'=preds.mod5.antielite_salience,
-             'West_vs_Post_Communists'=
-               ifelse(exdat$West_vs_post_comm==-0.5,"Western","Post-Communist"),
-             'antielite_salience'=exdat$antielite_salience.z.gmc,
-             'Country'=exdat$cntry,
-             'Childlessness'=exdat$childlessness)
-
-ggplot(plot.dat,aes(y=logit_childlessness,
-                    x=antielite_salience,
-                    color=West_vs_Post_Communists,
-                    fill=West_vs_Post_Communists))+
-  geom_smooth(method="lm")+
-  ylab("logit p(Childlessness)")+
-  xlab("Antielite salience")
-```
 
 ```{r}
 sinf<-sessionInfo()

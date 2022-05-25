@@ -1,0 +1,369 @@
+---
+title: "ERQ1"
+output: 
+  html_document: 
+    toc: yes
+    keep_md: yes
+date: '2022-05-02'
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Preregistration available From: https://osf.io/er4v5?view_only=edf4718aa62947dc9277c4a4749e4628
+
+
+Exploratory research questions
+
+ERQ1. If childlessness is associated with the economic left-right position of the party for which one has voted, are those associations stronger if this dimension is salient in the party’s public stance (i.e., is there a boundary condition to these associations, such that the ideology needs to be salient in order for the association to exist)?
+
+
+# Preparations
+
+## Packages
+
+```{r}
+
+library(lme4)
+library(emmeans)
+library(rio)
+library(dplyr)
+library(vjihelpers)
+library(ggplot2)
+library(MetBrewer)
+library(tibble)
+library(Hmisc)
+
+```
+
+## Custom functions
+
+```{r}
+source("../custom_functions.R")
+
+```
+
+## Data
+
+```{r}
+fdat<-import("../../data/processed/fdat.xlsx")
+```
+
+## Data exclusions
+
+```{r}
+
+exdat<-fdat %>%
+  dplyr::select(childlessness,
+                gndr.f,agea,minority,
+                gndr.c,age10.c,minority.c,
+                lrecon.z,
+                lrecon_salience.z,
+                cntry,
+                anweight) %>%
+  na.omit()
+```
+
+## Variable centering
+
+```{r}
+exdat<-
+  group_mean_center(
+    data=exdat,group.var="cntry",
+    vars=c("lrecon.z",
+           "lrecon_salience.z"),
+    grand.init = F)
+
+```
+
+# ERQ1 Analysis 
+
+### Fixed
+
+```{r}
+mod2.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),
+        weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod2.lrecon)
+getFE_glmer(mod2.lrecon)
+getVC(mod2.lrecon)
+
+```
+
+### Random
+
+```{r}
+mod3.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+
+          (lrecon.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod3.lrecon)
+getFE_glmer(mod3.lrecon)
+getVC(mod3.lrecon)
+
+```
+
+
+### Random without random effect correlation
+
+```{r}
+mod4.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+
+          (lrecon.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod4.lrecon)
+
+getFE_glmer(mod4.lrecon)
+getVC(mod4.lrecon)
+
+anova(mod2.lrecon,mod4.lrecon)
+anova(mod4.lrecon,mod3.lrecon)
+
+
+```
+
+
+
+
+
+
+## lrecon salience fixed main effect
+
+```{r}
+mod5.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+lrecon_salience.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod5.lrecon)
+getFE_glmer(mod5.lrecon)
+getVC(mod5.lrecon)
+
+```
+
+## lrecon salience random main effect
+
+```{r}
+mod6.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+lrecon_salience.z.gmc+
+          (lrecon_salience.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod6.lrecon)
+getFE_glmer(mod6.lrecon)
+getVC(mod6.lrecon)
+```
+
+
+
+## fixed interaction between lrecon and lrecon salience
+
+```{r}
+mod8.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+lrecon_salience.z.gmc+
+          lrecon.z.gmc:lrecon_salience.z.gmc+
+          (lrecon_salience.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod8.lrecon)
+getFE_glmer(mod8.lrecon)
+getVC(mod8.lrecon)
+
+
+```
+
+
+## fixed interaction between lrecon and lrecon salience without random effect correlation
+
+```{r}
+mod9.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+lrecon_salience.z.gmc+
+          lrecon.z.gmc:lrecon_salience.z.gmc+
+          (lrecon_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod9.lrecon)
+getFE_glmer(mod9.lrecon)
+getVC(mod9.lrecon)
+
+
+```
+
+## random interaction between lrecon and lrecon salience without random effect correlations
+
+```{r}
+mod10.lrecon<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrecon.z.gmc+lrecon_salience.z.gmc+
+          lrecon.z.gmc:lrecon_salience.z.gmc+
+          (lrecon.z.gmc:lrecon_salience.z.gmc+
+             lrecon_salience.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod10.lrecon)
+getFE_glmer(mod10.lrecon)
+getVC(mod10.lrecon)
+
+anova(mod9.lrecon,mod10.lrecon)
+
+
+```
+
+### marginal effects
+
+```{r}
+emtrends(mod9.lrecon,
+         var="lrecon.z.gmc",
+         specs="lrecon_salience.z.gmc",
+         at=list(lrecon_salience.z.gmc=c(-1,0,1)),
+         infer=c(T,T))
+
+emtrends(mod9.lrecon,
+         var="lrecon.z.gmc",
+         specs="lrecon_salience.z.gmc",
+         at=list(lrecon_salience.z.gmc=c(-1,0,1)),
+         infer=c(T,T),regrid="response")
+
+
+```
+
+
+
+
+
+### Plot
+
+```{r}
+range(exdat$lrecon_salience.z.gmc)
+hist(exdat$lrecon_salience.z.gmc)
+quantile(exdat$lrecon_salience.z.gmc,c(.25,.50,.75))
+
+p<-
+  emmip(mod9.lrecon, lrecon_salience.z.gmc ~ lrecon.z.gmc,
+        at=list(lrecon_salience.z.gmc = c(-1,0,1),
+                #minority.c = c(-0.5,0.5),
+                lrecon.z.gmc=seq(from=-3.05,to=1.15,by=0.01)),
+        plotit=F,CIs=TRUE,type="response")
+
+head(p)
+
+#p$ethnic_minority=
+#  ifelse(p$minority.c==(-0.5),
+#         "Ethnic majority","Ethnic minority")
+p$lrecon_salience<-p$tvar
+levels(p$lrecon_salience)<-
+  c("Low Salience","Average Salience","High Salience")
+
+
+min.low<-
+  min(exdat[exdat$lrecon_salience.z.gmc<=(-1),
+            "lrecon.z.gmc"])
+max.low<-
+  max(exdat[exdat$lrecon_salience.z.gmc<=(-1),
+            "lrecon.z.gmc"])
+
+
+p$filter.low<-
+  ifelse(p$lrecon_salience.z.gmc==(-1) &
+           (p$lrecon.z.gmc<min.low | 
+              p$lrecon.z.gmc>max.low),0,1)
+
+table(p$filter.low)
+
+min.mid<-
+  min(exdat[exdat$lrecon_salience.z.gmc>(-1) |
+              exdat$lrecon_salience.z.gmc<(1),
+            "lrecon.z.gmc"])
+max.mid<-
+  max(exdat[exdat$lrecon_salience.z.gmc>(-1) |
+              exdat$lrecon_salience.z.gmc<(1),
+            "lrecon.z.gmc"])
+
+
+p$filter.mid<-
+  ifelse(p$lrecon_salience.z.gmc==(0) &
+           (p$lrecon.z.gmc<min.mid | 
+              p$lrecon.z.gmc>max.mid),0,1)
+
+table(p$filter.mid)
+
+min.high<-
+  min(exdat[exdat$lrecon_salience.z.gmc>=(1) ,
+            "lrecon.z.gmc"])
+max.high<-
+  max(exdat[exdat$lrecon_salience.z.gmc>=(1) ,
+            "lrecon.z.gmc"])
+
+p$filter.high<-
+  ifelse(p$lrecon_salience.z.gmc==(1) &
+           (p$lrecon.z.gmc<min.high | 
+              p$lrecon.z.gmc>max.high),0,1)
+
+table(p$filter.high)
+
+p.ex<-p[p$filter.low!=0 & p$filter.mid!=0 & p$filter.high!=0,]
+
+met.brewer("Archambault")
+met.brewer("Archambault")[c(1,3,2)]
+
+p1<-ggplot(p.ex,aes(y=yvar,x=xvar,color=lrecon_salience))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymin=LCL, ymax=UCL),alpha=0.5)+
+  xlab("Economic Left-Right")+
+  ylab("P(Childlessness)")+
+  scale_color_manual(values=met.brewer("Archambault")[c(1,3,2)])+
+  facet_wrap(~lrecon_salience,ncol=3)+
+  theme(legend.position = "none",
+        text=element_text(size=16,  family="sans"),
+        panel.background = element_rect(fill = "white",
+                                        #colour = "black",
+                                        #size = 0.5, linetype = "solid"
+                                        ),
+        panel.grid.major.x = element_line(size = 0.5, linetype = 2,
+                                        colour = "black"))
+p1
+
+png(filename = 
+      "../../results/figures/lrecon_lrecon_salience_nonextrp.png",
+    units = "cm",
+    width = 29.7,height=21.0,res = 600)
+p1
+dev.off()
+
+```
+
+
+```{r}
+sinf<-sessionInfo()
+print(sinf,locale=F)
+```

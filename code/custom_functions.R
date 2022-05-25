@@ -24,363 +24,428 @@ vif.mer <- function (fit) {
 }
 
 
+# pipe for level-1 moderations
 
-# make a separate function to obtain nice data frame from r2mlm
-
-## decomposition
-
-DE.frame<-function(model){
+analysis_pipe<-function(predictor,directory){
   
-  s<-r2mlm(model,bargraph = F)[[1]]
-  srn<-rownames(s)
-  scn<-colnames(s)
+  #predictor="lrgen"
+  IV=paste0(predictor,".z.gmc")
+  #directory="Z:/postdoc/childless_left/code/analysis"
+  dir.create(path = paste0(directory,"/",predictor))
   
-  attr(s, "dimnames") <- NULL
-  
-  d<-data.frame(matrix(as.vector(s),
-                       nrow=dim(s)[1],
-                       ncol=dim(s)[2],
-                       byrow=F))
-  colnames(d)<-scn
-  rownames(d)<-srn
-  return(d)
-  
-}
-
-## effect size
-
-R2.frame<-function(model){
-  
-  s<-r2mlm(model,bargraph = F)[[2]]
-  srn<-rownames(s)
-  scn<-colnames(s)
-  
-  attr(s, "dimnames") <- NULL
-  
-  d<-data.frame(matrix(as.vector(s),
-                       nrow=dim(s)[1],
-                       ncol=dim(s)[2],
-                       byrow=F))
-  colnames(d)<-scn
-  rownames(d)<-srn
-  return(d)
-  
-}
-
-
-## effect size change
-
-R2c.frame<-function(modelA,modelB){
-  
-  s<-r2mlm_comp(modelA,modelB,bargraph = F)[[3]]
-  srn<-rownames(s)
-  scn<-colnames(s)
-  
-  attr(s, "dimnames") <- NULL
-  
-  d<-data.frame(matrix(as.vector(s),
-                       nrow=dim(s)[1],
-                       ncol=dim(s)[2],
-                       byrow=F))
-  colnames(d)<-scn
-  rownames(d)<-srn
-  return(d)
-  
-}
-
-
-DV_by_values_pipe<-function(DV,IV,IV.c,directory){
-  
-  #DV=DV.vars[1]
-  #IV=value.vars
-  #IV.c=value.vars.c
-  #directory="Z:/postdoc/Values and Voting/results/main"
-  
-  dir.create(path = paste0(directory,"/",DV))
-  
-  dir.temp<-paste0(directory,"/",DV,"/")
+  dir.temp<-paste0(directory,"/",predictor,"/")
   
   # select only the defined variables
-  temp.fdat<- fdat %>% 
-    dplyr::select(all_of(IV),
-                  all_of(IV.c),
-                  all_of(DV),
-                  "gndr.c",
-                  "age10.c",
-                  "cntry",
-                  "anweight") %>%
+  exdat<-fdat %>%
+    dplyr::select(childlessness,
+                  gndr.f,agea,minority,
+                  gndr.c,age10.c,minority.c,
+                  paste0(predictor,".z"),
+                  cntry,
+                  West_vs_post_comm,
+                  anweight) %>%
     na.omit()
   
-  # center all IVs within country
+  exdat<-
+    group_mean_center(
+      data=exdat,group.var="cntry",
+      vars=paste0(predictor,".z"),
+      grand.init = F)
   
-  temp.fdat<-
-    group_mean_center(data=temp.fdat,group.var = "cntry",
-                      vars = c(IV,
-                               IV.c,
-                               "gndr.c",
-                               "age10.c"))
   
-  # fit DV-only model
+  # fit fixed effects model
   # define the formula
-  mod0.f<-
-    as.formula(paste0(DV,"~","(1|cntry)"))
+  mod2.f<-
+    as.formula(paste0("childlessness","~",
+                      "gndr.c+age10.c+minority.c+",
+                      IV,"+(1|cntry)"))
   
   ## fit the model
-  mod0<-lmer(mod0.f,
-             weights = anweight,data=temp.fdat)
+  mod2<-glmer(mod2.f,
+              data=exdat,
+              family=binomial(link="logit"),weights = anweight,
+              control = glmerControl(optimizer="bobyqa",
+                                     optCtrl=list(maxfun=2e6)))
+  ## collect important output
+  getFE_glmer(mod2,round = 10,p.round=10)
+  ## Fixed effects
+  export(rownames_to_column(getFE_glmer(mod2,round = 10,p.round=10)),
+         paste0(dir.temp,"mod2_FE.xlsx"),overwrite=T)
+  
+  ## Random effects
+  export(getVC(mod2,round = 12),
+         paste0(dir.temp,"mod2_RE.xlsx"),overwrite=T)
+  
+  # fit random effects model
+  # define the formula
+  mod3.f<-
+    as.formula(paste0("childlessness","~",
+                      "gndr.c+age10.c+minority.c+",
+                      IV,"+(",IV,"|cntry)"))
+  
+  ## fit the model
+  mod3<-glmer(mod3.f,
+              data=exdat,
+              family=binomial(link="logit"),weights = anweight,
+              control = glmerControl(optimizer="bobyqa",
+                                     optCtrl=list(maxfun=2e6)))
+  ## collect important output
+  
+  ## Fixed effects
+  export(rownames_to_column(getFE_glmer(mod3,round = 10,p.round=10)),
+         paste0(dir.temp,"mod3_FE.xlsx"),overwrite=T)
+  
+  ## Random effects
+  export(getVC(mod3,round = 12),
+         paste0(dir.temp,"mod3_RE.xlsx"),overwrite=T)
+  
+  ## Model comparison to fixed only
+  
+  export(rownames_to_column(data.frame(anova(mod2,mod3))),
+         paste0(dir.temp,"mod3_MC.xlsx"),overwrite=T)
+  
+  # fit random effects model without random effect correlation
+  # define the formula
+  mod4.f<-
+    as.formula(paste0("childlessness","~",
+                      "gndr.c+age10.c+minority.c+",
+                      IV,"+(",IV,"||cntry)"))
+  
+  ## fit the model
+  mod4<-glmer(mod4.f,
+              data=exdat,
+              family=binomial(link="logit"),weights = anweight,
+              control = glmerControl(optimizer="bobyqa",
+                                     optCtrl=list(maxfun=2e6)))
+  ## collect important output
+  
+  ## Fixed effects
+  export(rownames_to_column(getFE_glmer(mod4,round = 10,p.round=10)),
+         paste0(dir.temp,"mod4_FE.xlsx"),overwrite=T)
+  
+  ## Random effects
+  export(getVC(mod4,round = 12),
+         paste0(dir.temp,"mod4_RE.xlsx"),overwrite=T)
+  
+  ## Model comparison to fixed only
+  
+  export(rownames_to_column(data.frame(anova(mod2,mod4))),
+         paste0(dir.temp,"mod4_MC.xlsx"),overwrite=T)
+  
+  ## Model comparison to random with correlation
+  
+  export(rownames_to_column(data.frame(anova(mod4,mod3))),
+         paste0(dir.temp,"mod4_MC2.xlsx"),overwrite=T)
+  
+  ## Moderation by gender
+  
+  ### select which model is extended
+  
+  if (!isSingular(mod3)) {
+    temp.mod<-mod3
+  } else if (!isSingular(mod4)){
+    temp.mod<-mod4
+  } else {
+    temp.mod<-mod2
+  }
+  
+  # formula for fixed only
+  
+  mod1.gndr.f<-
+    as.formula(paste0("childlessness","~",
+                                paste0(as.character(formula(temp.mod))[3],
+                                       "+gndr.c:",IV)))
+  
+  ## fit the model
+  mod1.gndr<-glmer(mod1.gndr.f,
+              data=exdat,
+              family=binomial(link="logit"),weights = anweight,
+              control = glmerControl(optimizer="bobyqa",
+                                     optCtrl=list(maxfun=2e6)))
+
+  ## collect important output
+  
+  ## Fixed effects
+  export(rownames_to_column(getFE_glmer(mod1.gndr,round = 10,p.round=10)),
+         paste0(dir.temp,"mod1.gndr_FE.xlsx"),overwrite=T)
+  
+  ## Random effects
+  export(getVC(mod1.gndr,round = 12),
+         paste0(dir.temp,"mod1.gndr_RE.xlsx"),overwrite=T)
+  
+  # formula for random sex and interaction effect
+  
+  mod2.gndr.f<-
+    as.formula(paste0("childlessness","~",
+                      paste0(as.character(formula(temp.mod))[3],
+                             "+gndr.c:",IV,
+                             "+(0+gndr.c+gndr.c:",IV,"|cntry)")))
+  
+  ## fit the model
+  mod2.gndr<-glmer(mod2.gndr.f,
+                   data=exdat,
+                   family=binomial(link="logit"),weights = anweight,
+                   control = glmerControl(optimizer="bobyqa",
+                                          optCtrl=list(maxfun=2e6)))
+  
   
   ## collect important output
   
   ## Fixed effects
-  export(rownames_to_column(data.frame(summary(mod0)$coefficients)),
-         paste0(dir.temp,"mod0_FE.xlsx"),overwrite=T)
+  export(rownames_to_column(getFE_glmer(mod2.gndr,round = 10,p.round=10)),
+         paste0(dir.temp,"mod2.gndr_FE.xlsx"),overwrite=T)
   
   ## Random effects
-  export(getVC(mod0,round = 12),
-         paste0(dir.temp,"mod0_RE.xlsx"),overwrite=T)
+  export(getVC(mod2.gndr,round = 12),
+         paste0(dir.temp,"mod2.gndr_RE.xlsx"),overwrite=T)
   
-  ## Decompositions of variance
+  ## Model comparison to fixed gender model
   
-  export(rownames_to_column(DE.frame(mod0)),
-         paste0(dir.temp,"mod0_DC.xlsx"),overwrite=T)
+  export(rownames_to_column(data.frame(anova(mod1.gndr,mod2.gndr))),
+         paste0(dir.temp,"mod2.gndr_MC.xlsx"),overwrite=T)
   
-  ## Variance explained
+  # formula for random sex and interaction effect without correlation
   
-  export(rownames_to_column(R2.frame(mod0)),
-         paste0(dir.temp,"mod0_R2.xlsx"),overwrite=T)
-  
-  # fit covariates-only model
-  # define the formula
-  mod1.f<-
-    as.formula(paste0(DV,"~","gndr.c.gmc+age10.c.gmc+","(1|cntry)"))
+  mod3.gndr.f<-
+    as.formula(paste0("childlessness","~",
+                      paste0(as.character(formula(temp.mod))[3],
+                             "+gndr.c:",IV,
+                             "+(0+gndr.c+gndr.c:",IV,"||cntry)")))
   
   ## fit the model
-  mod1<-lmer(mod1.f,
-             weights = anweight,data=temp.fdat)
+  mod3.gndr<-glmer(mod3.gndr.f,
+                   data=exdat,
+                   family=binomial(link="logit"),weights = anweight,
+                   control = glmerControl(optimizer="bobyqa",
+                                          optCtrl=list(maxfun=2e6)))
+  
   
   ## collect important output
   
   ## Fixed effects
-  export(rownames_to_column(getFE(mod1,round=12,p.round=12)),
-         paste0(dir.temp,"mod1_FE.xlsx"),overwrite=T)
+  export(rownames_to_column(getFE_glmer(mod3.gndr,round = 10,p.round=10)),
+         paste0(dir.temp,"mod3.gndr_FE.xlsx"),overwrite=T)
   
   ## Random effects
-  export(getVC(mod1,round = 12),
-         paste0(dir.temp,"mod1_RE.xlsx"),overwrite=T)
+  export(getVC(mod3.gndr,round = 12),
+         paste0(dir.temp,"mod3.gndr_RE.xlsx"),overwrite=T)
   
-  ## Decompositions of variance
+  ## Model comparison to fixed gender model
   
-  export(rownames_to_column(DE.frame(mod1)),
-         paste0(dir.temp,"mod1_DC.xlsx"),overwrite=T)
+  export(rownames_to_column(data.frame(anova(mod1.gndr,mod3.gndr))),
+         paste0(dir.temp,"mod3.gndr_MC.xlsx"),overwrite=T)
   
-  ## Variance explained
+  ## Model comparison to random gender model with correlations
   
-  export(rownames_to_column(R2.frame(mod1)),
-         paste0(dir.temp,"mod1_R2.xlsx"),overwrite=T)
+  export(rownames_to_column(data.frame(anova(mod3.gndr,mod2.gndr))),
+         paste0(dir.temp,"mod3.gndr_MC2.xlsx"),overwrite=T)
   
-  # Loop through each IV (and) IV.c
+  ## Marginal effects
   
-  for (i in 1:length(IV)){
+  ### select which model is used
+  
+  if (!isSingular(mod2.gndr)) {
+    temp.gndr.mod<-mod2.gndr
+  } else if (!isSingular(mod3.gndr)){
+    temp.gndr.mod<-mod3.gndr
+  } else {
+    temp.gndr.mod<-mod1.gndr
+  }
+  
+  temp.gndr.marg<-
+    emtrends(temp.gndr.mod,
+             var=IV,
+             specs="gndr.c",
+             at=list(gndr.c=c(-0.5,0.5)),
+             infer=c(T,T))
+  
+  
+  export(data.frame(temp.gndr.marg),
+         paste0(dir.temp,"gndr_marg.xlsx"),
+         overwrite=T)
+  
+  ## Moderation by minority ethnic status
+  
+  # formula for fixed only
+  
+  mod1.minority.f<-
+    as.formula(paste0("childlessness","~",
+                      paste0(as.character(formula(temp.mod))[3],
+                             "+minority.c:",IV)))
+  
+  ## fit the model
+  mod1.minority<-glmer(mod1.minority.f,
+                   data=exdat,
+                   family=binomial(link="logit"),weights = anweight,
+                   control = glmerControl(optimizer="bobyqa",
+                                          optCtrl=list(maxfun=2e6)))
+  
+  ## collect important output
+  
+  ## Fixed effects
+  export(rownames_to_column(getFE_glmer(mod1.minority,round = 10,p.round=10)),
+         paste0(dir.temp,"mod1.minority_FE.xlsx"),overwrite=T)
+  
+  ## Random effects
+  export(getVC(mod1.minority,round = 12),
+         paste0(dir.temp,"mod1.minority_RE.xlsx"),overwrite=T)
+  
+  # formula for random minority and interaction effect
+  
+  mod2.minority.f<-
+    as.formula(paste0("childlessness","~",
+                      paste0(as.character(formula(temp.mod))[3],
+                             "+minority.c:",IV,
+                             "+(0+minority.c+minority.c:",IV,"|cntry)")))
+  
+  ## fit the model
+  mod2.minority<-glmer(mod2.minority.f,
+                   data=exdat,
+                   family=binomial(link="logit"),weights = anweight,
+                   control = glmerControl(optimizer="bobyqa",
+                                          optCtrl=list(maxfun=2e6)))
+  
+  
+  ## collect important output
+  
+  ## Fixed effects
+  export(rownames_to_column(getFE_glmer(mod2.minority,round = 10,p.round=10)),
+         paste0(dir.temp,"mod2.minority_FE.xlsx"),overwrite=T)
+  
+  ## Random effects
+  export(getVC(mod2.minority,round = 12),
+         paste0(dir.temp,"mod2.minority_RE.xlsx"),overwrite=T)
+  
+  ## Model comparison to fixed minority model
+  
+  export(rownames_to_column(data.frame(anova(mod1.minority,mod2.minority))),
+         paste0(dir.temp,"mod2.minority_MC.xlsx"),overwrite=T)
+  
+  # formula for random minority and interaction effect without correlation
+  
+  mod3.minority.f<-
+    as.formula(paste0("childlessness","~",
+                      paste0(as.character(formula(temp.mod))[3],
+                             "+minority.c:",IV,
+                             "+(0+minority.c+minority.c:",IV,"||cntry)")))
+  
+  ## fit the model
+  mod3.minority<-glmer(mod3.minority.f,
+                   data=exdat,
+                   family=binomial(link="logit"),weights = anweight,
+                   control = glmerControl(optimizer="bobyqa",
+                                          optCtrl=list(maxfun=2e6)))
+  
+  
+  ## collect important output
+  
+  ## Fixed effects
+  export(rownames_to_column(getFE_glmer(mod3.minority,round = 10,p.round=10)),
+         paste0(dir.temp,"mod3.minority_FE.xlsx"),overwrite=T)
+  
+  ## Random effects
+  export(getVC(mod3.minority,round = 12),
+         paste0(dir.temp,"mod3.minority_RE.xlsx"),overwrite=T)
+  
+  ## Model comparison to fixed minority model
+  
+  export(rownames_to_column(data.frame(anova(mod1.minority,mod3.minority))),
+         paste0(dir.temp,"mod3.minority_MC.xlsx"),overwrite=T)
+  
+  ## Model comparison to random minority model with correlations
+  
+  export(rownames_to_column(data.frame(anova(mod3.minority,mod2.minority))),
+         paste0(dir.temp,"mod3.minority_MC2.xlsx"),overwrite=T)
+  
+  ## Marginal effects
+  
+  ### select which model is used
+  
+  if (!isSingular(mod2.minority)) {
+    temp.minority.mod<-mod2.minority
+  } else if (!isSingular(mod3.minority)){
+    temp.minority.mod<-mod3.minority
+  } else {
+    temp.minority.mod<-mod1.minority
+  }
+  
+  temp.minority.marg<-
+    emtrends(temp.minority.mod,
+             var=IV,
+             specs="minority.c",
+             at=list(minority.c=c(-0.5,0.5)),
+             infer=c(T,T))
+  
+  export(data.frame(temp.minority.marg),
+         paste0(dir.temp,"minority_marg.xlsx"),
+         overwrite=T)
+  
+  
+  ## Moderation by West_vs_post_comm 
+  
+  # Is only tested if there was random variation across countries in the main
+  
+  if (anova(mod2,mod3)$`Pr(>Chisq)`[2] < .05 |
+      anova(mod2,mod4)$`Pr(>Chisq)`[2] < .05)
+  {
+    # formula for fixed only
     
-    IV.temp<-paste0(IV[i],".gmc")
-    IV.c.temp<-paste0(IV.c[i],".gmc")
-    
-    # formula for FE sole predictor
-    
-    mod2.f<-
-      as.formula(paste0(DV,"~",
-                        "gndr.c.gmc+age10.c.gmc+",
-                        IV.c.temp,"+",
-                        "(1|cntry)"))
+    mod1.West_vs_post_comm.f<-
+      as.formula(paste0("childlessness","~",
+                        paste0(as.character(formula(temp.mod))[3],
+                               "+West_vs_post_comm+West_vs_post_comm:",IV)))
     
     ## fit the model
-    mod2<-lmer(mod2.f,
-               weights = anweight,data=temp.fdat)
+    mod1.West_vs_post_comm<-
+      glmer(mod1.West_vs_post_comm.f,
+            data=exdat,
+            family=binomial(link="logit"),
+            weights = anweight,
+            control = glmerControl(optimizer="bobyqa",
+                                   optCtrl=list(maxfun=2e6)))
     
     ## collect important output
     
     ## Fixed effects
-    export(rownames_to_column(getFE(mod2,round=12,p.round=12)),
-           paste0(dir.temp,paste0(IV[i],"_mod2_FE.xlsx")),overwrite=T)
+    export(rownames_to_column(getFE_glmer(mod1.West_vs_post_comm,round = 10,p.round=10)),
+           paste0(dir.temp,"mod1.West_vs_post_comm_FE.xlsx"),overwrite=T)
     
     ## Random effects
-    export(getVC(mod2,round = 12),
-           paste0(dir.temp,paste0(IV[i],"_mod2_RE.xlsx")),overwrite=T)
+    export(getVC(mod1.West_vs_post_comm,round = 12),
+           paste0(dir.temp,"mod1.West_vs_post_comm_RE.xlsx"),overwrite=T)
     
-    ## Decompositions of variance
+    ## Marginal effects
     
-    export(rownames_to_column(DE.frame(mod2)),
-           paste0(dir.temp,paste0(IV[i],"_mod2_DC.xlsx")),overwrite=T)
+    temp.West_vs_post_comm.marg<-
+      emtrends(mod1.West_vs_post_comm,
+               var=IV,
+               specs="West_vs_post_comm",
+               at=list(West_vs_post_comm=c(-0.5,0.5)),
+               infer=c(T,T))
     
-    ## Variance explained
-    
-    export(rownames_to_column(R2.frame(mod2)),
-           paste0(dir.temp,paste0(IV[i],"_mod2_R2.xlsx")),overwrite=T)
-    
-    ## Variance explained change
-    
-    export(rownames_to_column(R2c.frame(mod1,mod2)),
-           paste0(dir.temp,paste0(IV[i],"_mod2_R2c.xlsx")),overwrite=T)
-    
-    # formula for FE sole predictor
-    
-    mod3.f<-
-      as.formula(paste0(DV,"~",
-                        "gndr.c.gmc+age10.c.gmc+",
-                        IV.c.temp,"+(",IV.c.temp,"|cntry)"))
-    
-    ## fit the model
-    mod3<-lmer(mod3.f,
-               weights = anweight,data=temp.fdat)
-    
-    ## collect important output
-    
-    ## Fixed effects
-    export(rownames_to_column(getFE(mod3,round=12,p.round=12)),
-           paste0(dir.temp,paste0(IV[i],"_mod3_FE.xlsx")),overwrite=T)
-    
-    ## Random effects
-    export(getVC(mod3,round = 12),
-           paste0(dir.temp,paste0(IV[i],"_mod3_RE.xlsx")),overwrite=T)
-    
-    ## Decompositions of variance
-    
-    export(rownames_to_column(DE.frame(mod3)),
-           paste0(dir.temp,paste0(IV[i],"_mod3_DC.xlsx")),overwrite=T)
-    
-    ## Variance explained
-    
-    export(rownames_to_column(R2.frame(mod3)),
-           paste0(dir.temp,paste0(IV[i],"_mod3_R2.xlsx")),overwrite=T)
-    
-    ## Variance explained change
-    
-    export(rownames_to_column(R2c.frame(mod2,mod3)),
-           paste0(dir.temp,paste0(IV[i],"_mod3_R2c.xlsx")),overwrite=T)
-    
-    ## Test for model improvement
-    
-    export(rownames_to_column(data.frame(anova(mod2,mod3))),
-           paste0(dir.temp,paste0(IV[i],"_mod3_MC.xlsx")),overwrite=T)
-    
-    # refit without random effect correlation
-    
-    mod3.f.no.recov<-
-      as.formula(paste0(DV,"~",
-                        "gndr.c.gmc+age10.c.gmc+",
-                        IV.c.temp,"+(",IV.c.temp,"||cntry)"))
-    
-    export(rownames_to_column(data.frame(anova(lmer(mod3.f.no.recov,
-                                                    weights = anweight,
-                                                    data=temp.fdat),
-                                               mod3))),
-           paste0(dir.temp,paste0(IV[i],"_mod3_RECOV.xlsx")),overwrite=T)
-    
-    
-    # formula for FE as one of many predictors
-    
-    mod4.f<-
-      as.formula(paste0(DV,"~",
-                        "gndr.c.gmc+age10.c.gmc+",
-                        paste0(paste0(IV,".gmc"),collapse=" + "),
-                        "+",
-                        "(1|cntry)"))
-    
-    ## fit the model
-    mod4<-lmer(mod4.f,
-               weights = anweight,data=temp.fdat)
-    
-    ## collect important output
-    
-    ## Fixed effects
-    export(rownames_to_column(getFE(mod4,round=12,p.round=12)),
-           paste0(dir.temp,paste0(IV[i],"_mod4_FE.xlsx")),overwrite=T)
-    
-    ## Random effects
-    export(getVC(mod4,round = 12),
-           paste0(dir.temp,paste0(IV[i],"_mod4_RE.xlsx")),overwrite=T)
-    
-    ## Decompositions of variance
-    
-    export(rownames_to_column(DE.frame(mod4)),
-           paste0(dir.temp,paste0(IV[i],"_mod4_DC.xlsx")),overwrite=T)
-    
-    ## Variance explained
-    
-    export(rownames_to_column(R2.frame(mod4)),
-           paste0(dir.temp,paste0(IV[i],"_mod4_R2.xlsx")),overwrite=T)
-    
-    ## Variance explained change (total)
-    
-    export(rownames_to_column(R2c.frame(mod1,mod4)),
-           paste0(dir.temp,paste0(IV[i],"_mod4_R2c_total.xlsx")),overwrite=T)
-    
-    # compare to model without the focal predictor
-    
-    mod4.red.f<-
-      as.formula(paste0(DV,"~",
-                        "gndr.c.gmc+age10.c.gmc+",
-                        paste0(paste0(IV[-i],".gmc"),collapse=" + "),
-                        "+",
-                        "(1|cntry)"))
-    
-    mod4.red<-lmer(mod4.red.f,
-                   weights = anweight,data=temp.fdat)
-    
-    ## Variance explained unique
-    
-    export(rownames_to_column(R2c.frame(mod4.red,mod4)),
-           paste0(dir.temp,
-                  paste0(IV[i],"_mod4_R2c_unique.xlsx")),overwrite=T)
-    
-    # formula for RE as one of many predictors
-    
-    mod5.f<-
-      as.formula(paste0(DV,"~",
-                        "gndr.c.gmc+age10.c.gmc+",
-                        paste0(paste0(IV,".gmc"),collapse=" + "),
-                        "+",
-                        "(",IV.temp,"|cntry)"))
-    
-    ## fit the model
-    mod5<-lmer(mod5.f,
-               weights = anweight,data=temp.fdat)
-    
-    ## collect important output
-    
-    ## Fixed effects
-    export(rownames_to_column(getFE(mod5,round=12,p.round=12)),
-           paste0(dir.temp,paste0(IV[i],"_mod5_FE.xlsx")),overwrite=T)
-    
-    ## Random effects
-    export(getVC(mod5,round = 12),
-           paste0(dir.temp,paste0(IV[i],"_mod5_RE.xlsx")),overwrite=T)
-    
-    ## Decompositions of variance
-    
-    export(rownames_to_column(DE.frame(mod5)),
-           paste0(dir.temp,paste0(IV[i],"_mod5_DC.xlsx")),overwrite=T)
-    
-    ## Variance explained
-    
-    export(rownames_to_column(R2.frame(mod5)),
-           paste0(dir.temp,paste0(IV[i],"_mod5_R2.xlsx")),overwrite=T)
-    
-    ## Variance explained change (total)
-    
-    export(rownames_to_column(R2c.frame(mod1,mod5)),
-           paste0(dir.temp,paste0(IV[i],"_mod5_R2c_total.xlsx")),
+    export(data.frame(temp.West_vs_post_comm.marg),
+           paste0(dir.temp,"West_vs_post_comm_marg.xlsx"),
            overwrite=T)
-    
-    ## Variance explained unique
-    
-    export(rownames_to_column(R2c.frame(mod4,mod5)),
-           paste0(dir.temp,
-                  paste0(IV[i],"_mod5_R2c_unique.xlsx")),overwrite=T)
     
     
   }
   
+  # compile singularity information
   
+  singularity<-
+    c(mod2=isSingular(mod2),
+      mod3=isSingular(mod3),
+      mod4=isSingular(mod4),
+      mod1.gndr=isSingular(mod1.gndr),
+      mod2.gndr=isSingular(mod2.gndr),
+      mod3.gndr=isSingular(mod3.gndr),
+      mod1.minority=isSingular(mod1.minority),
+      mod2.minority=isSingular(mod2.minority),
+      mod3.minority=isSingular(mod3.minority))
+    
+  export(rownames_to_column(data.frame(singularity)),
+         paste0(dir.temp,"singularity.xlsx"),
+         overwrite=T)  
+    
 }
 

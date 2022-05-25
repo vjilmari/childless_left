@@ -32,7 +32,6 @@ library(ggplot2)
 
 ```{r}
 source("../custom_functions.R")
-source("../modglmer_logit.R")
 ```
 
 ## Data
@@ -112,8 +111,12 @@ mod2.vote<-
           vote.c+
           (1|cntry),
         data=exdat,
-        family=binomial(link="logit"),weights = anweight)
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod2.vote)
+getFE_glmer(mod2.vote)
+getVC(mod2.vote)
 ```
 
 ## Random main effect
@@ -125,8 +128,11 @@ mod3.vote<-
           (vote.c|cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod3.vote)
+getFE_glmer(mod3.vote)
+getVC(mod3.vote)
 
 anova(mod2.vote,mod3.vote)
 
@@ -136,8 +142,11 @@ mod3.vote.no.recov<-
           (vote.c||cntry),
         data=exdat,
         family=binomial(link="logit"),weights = anweight,
-        control = glmerControl(optimizer="bobyqa"))
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
 summary(mod3.vote.no.recov)
+getFE_glmer(mod3.vote.no.recov)
+getVC(mod3.vote.no.recov)
 
 anova(mod2.vote,mod3.vote.no.recov)
 anova(mod3.vote.no.recov,mod3.vote)

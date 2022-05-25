@@ -3,35 +3,29 @@ library(knitr)
 
 # Render RMDs to .html and .md
 
-render(input = "code/preparations/1_Extract_parties_voted_in_ESS.Rmd",
+render(input = "code/analysis/RQ1_RQ2.Rmd",
        envir = new.env())
 
-
-render(input = "code/preparations/2_Assign_ESS_party_numbers_to_CHES.Rmd",
+render(input = "code/analysis/ERQ1.Rmd",
        envir = new.env())
 
-
-render(input = "code/preparations/3_merge_ESS_and_CHES_by_vote.Rmd",
+render(input = "code/analysis/Descriptive_statistics.Rmd",
        envir = new.env())
 
-
-render(input = "code/preparations/4_Variable_transformations.Rmd",
+render(input = "code/analysis/main_effects_and_moderations_by_gndr_minority_west.Rmd",
        envir = new.env())
 
 # Convert RMD to R
 
-purl(input="code/preparations/1_Extract_parties_voted_in_ESS.Rmd",
-     output="code/preparations/1_Extract_parties_voted_in_ESS.R",
+purl(input="code/analysis/RQ1_RQ2.Rmd",
+     output="code/analysis/RQ1_RQ2.R",
      documentation = 2)
 
-purl(input="code/preparations/2_Assign_ESS_party_numbers_to_CHES.Rmd",
-     output="code/preparations/2_Assign_ESS_party_numbers_to_CHES.R",
+purl(input="code/analysis/ERQ1.Rmd",
+     output="code/analysis/ERQ1.R",
      documentation = 2)
 
-purl(input="code/preparations/3_merge_ESS_and_CHES_by_vote.Rmd",
-     output="code/preparations/3_merge_ESS_and_CHES_by_vote.R",
+purl(input="code/analysis/Descriptive_statistics.Rmd",
+     output="code/analysis/Descriptive_statistics.R",
      documentation = 2)
 
-purl(input="code/preparations/4_Variable_transformations.Rmd",
-     output="code/preparations/4_Variable_transformations.R",
-     documentation = 2)

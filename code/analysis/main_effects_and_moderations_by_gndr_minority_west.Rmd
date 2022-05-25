@@ -1,0 +1,97 @@
+---
+title: "Analysis for all PO variables: main effect, gender, minority, and west vs. east moderation"
+output: html_document
+date: '2022-05-23'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Preparations
+
+## Packages
+
+```{r}
+
+library(lme4)
+library(emmeans)
+library(rio)
+library(dplyr)
+library(vjihelpers)
+library(ggplot2)
+library(MetBrewer)
+library(tibble)
+library(Hmisc)
+
+```
+
+## Custom functions
+
+```{r}
+source("../custom_functions.R")
+
+```
+
+## Data
+
+```{r}
+fdat<-import("../../data/processed/fdat.xlsx")
+```
+
+
+## Code West and post-communist countries
+
+```{r}
+table(fdat$cntry)
+
+fdat$West_vs_post_comm<-
+  case_when(fdat$cntry == "AT" |
+              fdat$cntry == "BE" |
+              fdat$cntry == "CH" |
+              fdat$cntry == "DE" |
+              fdat$cntry == "DK" |
+              fdat$cntry == "ES" |
+              fdat$cntry == "FI" |
+              fdat$cntry == "FR" |
+              fdat$cntry == "GB" |
+              fdat$cntry == "IE" |
+              fdat$cntry == "IL" |
+              fdat$cntry == "NL" |
+              fdat$cntry == "NO" |
+              fdat$cntry == "PT" |
+              fdat$cntry == "SE" ~ -0.5,
+            TRUE~0.5)
+
+table(fdat$West_vs_post_comm,useNA="always")
+```
+
+
+
+# Analysis
+
+```{r}
+
+varnames<-names(fdat)[which(names(fdat)=="lrgen"):
+                        which(names(fdat)=="corrupt_salience")]
+
+t1<-Sys.time()
+
+for (i in 1:length(varnames)){
+  analysis_pipe(predictor=varnames[i],
+              directory=getwd())
+}
+
+t2<-Sys.time()
+t2-t1
+```
+
+# Session Information
+
+```{r}
+sinf<-sessionInfo()
+print(sinf,locale=F)
+```
+
+
