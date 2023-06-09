@@ -30,7 +30,7 @@ analysis_pipe<-function(predictor,directory){
   
   #predictor="lrgen"
   IV=paste0(predictor,".z.gmc")
-  #directory="Z:/postdoc/childless_left/code/analysis"
+  
   dir.create(path = paste0(directory,"/",predictor))
   
   dir.temp<-paste0(directory,"/",predictor,"/")

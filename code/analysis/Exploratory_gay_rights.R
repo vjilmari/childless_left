@@ -1,0 +1,208 @@
+#' ---
+#' title: "Exploratory analysis: Gay rights"
+#' output: 
+#'   html_document: 
+#'     toc: yes
+#'     keep_md: yes
+#' 
+#' ---
+#' 
+#' 
+## ---- include=FALSE-----------------------------------------------------------
+knitr::opts_chunk$set(echo = TRUE)
+
+#' 
+#' # Preparations
+#' 
+#' ## Packages
+#' 
+## -----------------------------------------------------------------------------
+
+library(lme4)
+library(emmeans)
+library(rio)
+library(dplyr)
+library(vjihelpers)
+library(ggplot2)
+library(MetBrewer)
+library(tibble)
+library(Hmisc)
+
+
+#' 
+#' ## Custom functions
+#' 
+## -----------------------------------------------------------------------------
+source("../custom_functions.R")
+
+
+#' 
+#' ## Data
+#' 
+## -----------------------------------------------------------------------------
+fdat<-import("../../data/processed/fdat.xlsx")
+
+#' 
+#' ## Data exclusions
+#' 
+## -----------------------------------------------------------------------------
+
+exdat<-fdat %>%
+  dplyr::select(childlessness,
+                gndr.f,agea,minority,
+                gndr.c,age10.c,minority.c,
+                lrgen,
+                lrecon,galtan,
+                lrecon_salience,galtan_salience,
+                freehms.R,freehms.R.z,
+                cntry,
+                anweight) %>%
+  mutate(freehms.R.z=as.numeric(freehms.R.z)) %>%
+  na.omit()
+
+
+#' 
+#' ## Variable centering
+#' 
+## -----------------------------------------------------------------------------
+
+exdat<-
+  group_mean_center(
+    data=exdat,group.var="cntry",
+    vars=c("freehms.R","freehms.R.z",
+           "lrgen","lrecon","galtan",
+           "lrecon_salience","galtan_salience"),
+    grand.init = F)
+
+
+#' 
+#' 
+#' ## Scaling CHES variables
+#' 
+## -----------------------------------------------------------------------------
+CHES<-
+  import("../../data/raw/2014_CHES_dataset_means.csv")
+
+sd.lrgen<-sd(CHES$lrgen,na.rm=T)
+sd.lrecon<-sd(CHES$lrecon,na.rm=T)
+sd.galtan<-sd(CHES$galtan,na.rm=T)
+sd.galtan_salience<-sd(CHES$galtan_salience,na.rm=T)
+sd.lrecon_salience<-sd(CHES$lrecon_salience,na.rm=T)
+
+exdat$lrgen.z.gmc<-exdat$lrgen.gmc/sd.lrgen
+exdat$lrecon.z.gmc<-exdat$lrecon.gmc/sd.lrecon
+exdat$galtan.z.gmc<-exdat$galtan.gmc/sd.galtan
+exdat$galtan_salience.z.gmc<-
+  exdat$galtan_salience.gmc/sd.galtan_salience
+exdat$lrecon_salience.z.gmc<-
+  exdat$lrecon_salience.gmc/sd.lrecon_salience
+
+#' 
+#' 
+#' # Analysis 
+#' 
+#' ## Baserate only
+#' 
+## -----------------------------------------------------------------------------
+mod0<-
+  glmer(childlessness~(1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+
+summary(mod0)
+
+
+#' 
+#' ## Covariates
+#' 
+## -----------------------------------------------------------------------------
+mod1<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+(1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+
+summary(mod1)
+
+
+#' 
+#' ## Fixed main effect
+#' 
+## -----------------------------------------------------------------------------
+mod2.freehms.R<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          freehms.R.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+summary(mod2.freehms.R)
+
+export(rownames_to_column(
+  getFE_glmer(mod2.freehms.R,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod2.freehms.R.xlsx",
+       overwrite=T)
+
+export(getVC(mod2.freehms.R,round = 10),
+       "../../results/estimates/VC_mod2.freehms.R.xlsx",
+       overwrite=T)
+
+#' 
+#' ## Random
+#' 
+## -----------------------------------------------------------------------------
+mod3.freehms.R<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          freehms.R.z.gmc+
+          (freehms.R.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod3.freehms.R)
+
+anova(mod2.freehms.R,mod3.freehms.R)
+
+export(rownames_to_column(
+  getFE_glmer(mod3.freehms.R,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod3.freehms.R.xlsx",
+       overwrite=T)
+
+export(getVC(mod3.freehms.R,round = 10),
+       "../../results/estimates/VC_mod3.freehms.R.xlsx",
+       overwrite=T)
+
+#' 
+#' 
+#' ## Random without random effect correlation
+#' 
+## -----------------------------------------------------------------------------
+mod4.freehms.R<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          freehms.R.z.gmc+
+          (freehms.R.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod4.freehms.R)
+
+anova(mod2.freehms.R,mod4.freehms.R)
+anova(mod4.freehms.R,mod3.freehms.R)
+
+export(rownames_to_column(
+  getFE_glmer(mod4.freehms.R,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod4.freehms.R.xlsx",
+       overwrite=T)
+
+export(getVC(mod4.freehms.R,round = 10),
+       "../../results/estimates/VC_mod4.freehms.R.xlsx",
+       overwrite=T)
+
+#' 
+#' 
+#' 
+#' # Session Information
+#' 
+## -----------------------------------------------------------------------------
+sinf<-sessionInfo()
+print(sinf,locale=F)
+

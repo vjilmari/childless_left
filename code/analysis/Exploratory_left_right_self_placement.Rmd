@@ -1,0 +1,208 @@
+---
+title: "Exploratory analysis: Left-right self-placement"
+output: 
+  html_document: 
+    toc: yes
+    keep_md: yes
+
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Preparations
+
+## Packages
+
+```{r}
+
+library(lme4)
+library(emmeans)
+library(rio)
+library(dplyr)
+library(vjihelpers)
+library(ggplot2)
+library(MetBrewer)
+library(tibble)
+library(Hmisc)
+
+```
+
+## Custom functions
+
+```{r}
+source("../custom_functions.R")
+
+```
+
+## Data
+
+```{r}
+fdat<-import("../../data/processed/fdat.xlsx")
+```
+
+## Data exclusions
+
+```{r}
+
+exdat<-fdat %>%
+  dplyr::select(childlessness,
+                gndr.f,agea,minority,
+                gndr.c,age10.c,minority.c,
+                lrgen,
+                lrecon,galtan,
+                lrecon_salience,galtan_salience,
+                lrscale,lrscale.z,
+                cntry,
+                anweight) %>%
+  mutate(lrscale.z=as.numeric(lrscale.z)) %>%
+  na.omit()
+
+```
+
+## Variable centering
+
+```{r}
+
+exdat<-
+  group_mean_center(
+    data=exdat,group.var="cntry",
+    vars=c("lrscale","lrscale.z",
+           "lrgen","lrecon","galtan",
+           "lrecon_salience","galtan_salience"),
+    grand.init = F)
+
+```
+
+
+## Scaling CHES variables
+
+```{r}
+CHES<-
+  import("../../data/raw/2014_CHES_dataset_means.csv")
+
+sd.lrgen<-sd(CHES$lrgen,na.rm=T)
+sd.lrecon<-sd(CHES$lrecon,na.rm=T)
+sd.galtan<-sd(CHES$galtan,na.rm=T)
+sd.galtan_salience<-sd(CHES$galtan_salience,na.rm=T)
+sd.lrecon_salience<-sd(CHES$lrecon_salience,na.rm=T)
+
+exdat$lrgen.z.gmc<-exdat$lrgen.gmc/sd.lrgen
+exdat$lrecon.z.gmc<-exdat$lrecon.gmc/sd.lrecon
+exdat$galtan.z.gmc<-exdat$galtan.gmc/sd.galtan
+exdat$galtan_salience.z.gmc<-
+  exdat$galtan_salience.gmc/sd.galtan_salience
+exdat$lrecon_salience.z.gmc<-
+  exdat$lrecon_salience.gmc/sd.lrecon_salience
+```
+
+
+# Analysis 
+
+## Baserate only
+
+```{r}
+mod0<-
+  glmer(childlessness~(1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+
+summary(mod0)
+
+```
+
+## Covariates
+
+```{r}
+mod1<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+(1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+
+summary(mod1)
+
+```
+
+## Fixed main effect
+
+```{r}
+mod2.lrscale<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrscale.z.gmc+
+          (1|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight)
+summary(mod2.lrscale)
+
+export(rownames_to_column(
+  getFE_glmer(mod2.lrscale,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod2.lrscale.xlsx",
+       overwrite=T)
+
+export(getVC(mod2.lrscale,round = 10),
+       "../../results/estimates/VC_mod2.lrscale.xlsx",
+       overwrite=T)
+```
+
+## Random
+
+```{r}
+mod3.lrscale<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrscale.z.gmc+
+          (lrscale.z.gmc|cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod3.lrscale)
+
+anova(mod2.lrscale,mod3.lrscale)
+
+export(rownames_to_column(
+  getFE_glmer(mod3.lrscale,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod3.lrscale.xlsx",
+       overwrite=T)
+
+export(getVC(mod3.lrscale,round = 10),
+       "../../results/estimates/VC_mod3.lrscale.xlsx",
+       overwrite=T)
+```
+
+
+## Random without random effect correlation
+
+```{r}
+mod4.lrscale<-
+  glmer(childlessness~gndr.c+age10.c+minority.c+
+          lrscale.z.gmc+
+          (lrscale.z.gmc||cntry),
+        data=exdat,
+        family=binomial(link="logit"),weights = anweight,
+        control = glmerControl(optimizer="bobyqa",
+                               optCtrl=list(maxfun=2e6)))
+summary(mod4.lrscale)
+
+anova(mod2.lrscale,mod4.lrscale)
+anova(mod4.lrscale,mod3.lrscale)
+
+export(rownames_to_column(
+  getFE_glmer(mod4.lrscale,round = 10,p.round=10)),
+       "../../results/estimates/FE_mod4.lrscale.xlsx",
+       overwrite=T)
+
+export(getVC(mod4.lrscale,round = 10),
+       "../../results/estimates/VC_mod4.lrscale.xlsx",
+       overwrite=T)
+```
+
+
+
+# Session Information
+
+```{r}
+sinf<-sessionInfo()
+print(sinf,locale=F)
+```

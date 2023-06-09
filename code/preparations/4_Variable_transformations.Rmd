@@ -133,118 +133,6 @@ dat$edu.c<-case_when(dat$eisced==0~NA_real_,
 table(dat$edu.c,useNA="always")
 ```
 
-## Values
-
-```{r}
-val.vars<-
-  c("ipcrtiv",
-    "imprich",
-    "ipeqopt",
-    "ipshabt",
-    "impsafe",
-    "impdiff",
-    "ipfrule",
-    "ipudrst",
-    "ipmodst",
-    "ipgdtim",
-    "impfree",
-    "iphlppl",
-    "ipsuces",
-    "ipstrgv",
-    "ipadvnt",
-    "ipbhprp",
-    "iprspot",
-    "iplylfr",
-    "impenv",
-    "imptrad",
-    "impfun")
-
-# reverse code so that high values indicate high endorsment
-rev.values<-function(x){7-x}
-
-table(dat[,val.vars[1]])
-table(rev.values(dat[,val.vars[1]]))
-
-dat[,val.vars]<-sapply(dat[,val.vars],rev.values)
-table(dat[,val.vars[1]])
-
-# code response style
-
-dat$resp.style<-
-  rowMeans(dat[,val.vars])
-
-hist(dat$resp.style)
-
-# calculate value means
-# check https://www.europeansocialsurvey.org/data/themes.html?t=values
-
-# con
-attributes(ESS.dat[,val.vars[7]])$label
-attributes(ESS.dat[,val.vars[16]])$label
-dat$con<-rowMeans(dat[,c(val.vars[7],val.vars[16])])
-dat$con.c<-dat$con-dat$resp.style
-
-# tra
-attributes(ESS.dat[,val.vars[9]])$label
-attributes(ESS.dat[,val.vars[20]])$label
-dat$tra<-rowMeans(dat[,c(val.vars[9],val.vars[20])])
-dat$tra.c<-dat$tra-dat$resp.style
-
-# ben
-attributes(ESS.dat[,val.vars[12]])$label
-attributes(ESS.dat[,val.vars[18]])$label
-dat$ben<-rowMeans(dat[,c(val.vars[12],val.vars[18])])
-dat$ben.c<-dat$ben-dat$resp.style
-
-# uni
-attributes(ESS.dat[,val.vars[3]])$label
-attributes(ESS.dat[,val.vars[8]])$label
-attributes(ESS.dat[,val.vars[19]])$label
-dat$uni<-rowMeans(dat[,c(val.vars[3],val.vars[8],val.vars[19])])
-dat$uni.c<-dat$uni-dat$resp.style
-
-# sdi
-attributes(ESS.dat[,val.vars[1]])$label
-attributes(ESS.dat[,val.vars[11]])$label
-dat$sdi<-rowMeans(dat[,c(val.vars[1],val.vars[11])])
-dat$sdi.c<-dat$sdi-dat$resp.style
-
-# sti
-attributes(ESS.dat[,val.vars[6]])$label
-attributes(ESS.dat[,val.vars[15]])$label
-dat$sti<-rowMeans(dat[,c(val.vars[6],val.vars[15])])
-dat$sti.c<-dat$sti-dat$resp.style
-
-# hed
-attributes(ESS.dat[,val.vars[10]])$label
-attributes(ESS.dat[,val.vars[21]])$label
-dat$hed<-rowMeans(dat[,c(val.vars[10],val.vars[21])])
-dat$hed.c<-dat$hed-dat$resp.style
-
-# ach
-attributes(ESS.dat[,val.vars[4]])$label
-attributes(ESS.dat[,val.vars[13]])$label
-dat$ach<-rowMeans(dat[,c(val.vars[4],val.vars[13])])
-dat$ach.c<-dat$ach-dat$resp.style
-
-# pow
-attributes(ESS.dat[,val.vars[2]])$label
-attributes(ESS.dat[,val.vars[17]])$label
-dat$pow<-rowMeans(dat[,c(val.vars[2],val.vars[17])])
-dat$pow.c<-dat$pow-dat$resp.style
-
-# sec
-attributes(ESS.dat[,val.vars[5]])$label
-attributes(ESS.dat[,val.vars[14]])$label
-dat$sec<-rowMeans(dat[,c(val.vars[5],val.vars[14])])
-dat$sec.c<-dat$sec-dat$resp.style
-
-vals<-c("con","tra","ben","uni","sdi",
-        "sti","hed","ach","pow","sec")
-
-
-```
-
 ## Political orientation
 
 ```{r}
@@ -401,6 +289,77 @@ dat$minority.c<-dat$minority-0.5
 table(dat$minority.c)
 ```
 
+## Left-Right self-placement
+
+```{r}
+attributes(ESS.dat$lrscale)
+table(dat$lrscale,useNA="always")
+
+dat$lrscale.z<-scale(dat$lrscale,center=T,scale=T)
+
+```
+
+## Reducing income differences
+
+```{r}
+attributes(ESS.dat$gincdif)
+table(dat$gincdif,useNA="always")
+
+# reverse code so that high number indicates endorsement
+dat$gincdif.R<-(6-dat$gincdif)
+table(dat$gincdif.R,useNA="always")
+
+dat$gincdif.R.z<-scale(dat$gincdif.R,center=T,scale=T)
+
+```
+
+## Gay rights
+
+```{r}
+attributes(ESS.dat$freehms)
+table(dat$freehms,useNA="always")
+
+# reverse code so that high number indicates endorsement
+dat$freehms.R<-(6-dat$freehms)
+table(dat$freehms.R,useNA="always")
+
+dat$freehms.R.z<-scale(dat$freehms.R,center=T,scale=T)
+
+```
+
+## Immigration
+
+```{r}
+attributes(ESS.dat$imwbcnt)
+table(dat$imwbcnt,useNA="always")
+
+dat$imwbcnt.z<-scale(dat$imwbcnt,center=T,scale=T)
+
+```
+
+## Shared traditions
+
+```{r}
+attributes(ESS.dat$pplstrd)
+table(dat$pplstrd,useNA="always")
+
+# reverse code so that high number indicates endorsement
+dat$pplstrd.R<-(6-dat$pplstrd)
+table(dat$pplstrd.R,useNA="always")
+
+dat$pplstrd.R.z<-scale(dat$pplstrd.R,center=T,scale=T)
+
+```
+
+## Religiousness
+
+```{r}
+attributes(ESS.dat$rlgdgr)
+table(dat$rlgdgr,useNA="always")
+
+dat$rlgdgr.z<-scale(dat$rlgdgr,center=T,scale=T)
+```
+
 # Final set of variables needed for the analysis
 
 ```{r}
@@ -412,22 +371,17 @@ analysis.vars<-
     "income","income.f","income.fr",
     "edu","edu.f","edu.c",
     "vote","vote.c",
-    "con","con.c",
-    "tra","tra.c",
-    "ben","ben.c",
-    "uni","uni.c",
-    "sdi","sdi.c",
-    "sti","sti.c",
-    "hed","hed.c",
-    "ach","ach.c",
-    "pow","pow.c",
-    "sec","sec.c",
-    "resp.style",
     all_of(CHES.vars),
     all_of(paste0(CHES.vars,".z")),
     "childlessness",
     "minority",
-    "minority.c")
+    "minority.c",
+    "lrscale","lrscale.z",
+    "gincdif","gincdif.R","gincdif.R.z",
+    "freehms","freehms.R","freehms.R.z",
+    "imwbcnt","imwbcnt.z",
+    "pplstrd","pplstrd.R","pplstrd.R.z",
+    "rlgdgr","rlgdgr.z")
 
 # test if they are all in the data file
 analysis.vars %in% names(dat)

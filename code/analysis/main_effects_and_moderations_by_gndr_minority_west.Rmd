@@ -1,7 +1,8 @@
 ---
 title: "Analysis for all PO variables: main effect, gender, minority, and west vs. east moderation"
-output: html_document
-date: '2022-05-23'
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -66,7 +67,6 @@ fdat$West_vs_post_comm<-
 
 table(fdat$West_vs_post_comm,useNA="always")
 ```
-
 
 
 # Analysis

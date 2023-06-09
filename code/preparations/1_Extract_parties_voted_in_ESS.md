@@ -15,6 +15,14 @@ output:
 
 ```r
 library(rio)
+```
+
+```
+## The following rio suggested packages are not installed: 'arrow', 'feather', 'fst', 'hexView', 'pzfx', 'readODS', 'rmatio'
+## Use 'install_formats()' to install them
+```
+
+```r
 library(sjlabelled)
 source("../custom_functions.R")
 ```
@@ -237,29 +245,29 @@ print(s,locale=F)
 ```
 
 ```
-## R version 4.2.0 (2022-04-22 ucrt)
+## R version 4.3.0 (2023-04-21 ucrt)
 ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-## Running under: Windows 10 x64 (build 19043)
+## Running under: Windows 10 x64 (build 19045)
 ## 
 ## Matrix products: default
+## 
 ## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] sjlabelled_1.2.0 rio_0.5.29      
+## [1] sjlabelled_1.2.0 rio_0.5.29       knitr_1.42       rmarkdown_2.21  
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] zip_2.2.0         Rcpp_1.0.8.3      cellranger_1.1.0  bslib_0.3.1      
-##  [5] compiler_4.2.0    pillar_1.7.0      jquerylib_0.1.4   forcats_0.5.1    
-##  [9] tools_4.2.0       digest_0.6.29     jsonlite_1.8.0    evaluate_0.15    
-## [13] lifecycle_1.0.1   tibble_3.1.6      pkgconfig_2.0.3   rlang_1.0.2      
-## [17] openxlsx_4.2.5    cli_3.3.0         rstudioapi_0.13   curl_4.3.2       
-## [21] yaml_2.3.5        haven_2.5.0       xfun_0.30         fastmap_1.1.0    
-## [25] stringr_1.4.0     knitr_1.39        vctrs_0.4.1       sass_0.4.1       
-## [29] hms_1.1.1         glue_1.6.2        data.table_1.14.2 R6_2.5.1         
-## [33] fansi_1.0.3       readxl_1.4.0      foreign_0.8-82    rmarkdown_2.14   
-## [37] tzdb_0.3.0        readr_2.1.2       magrittr_2.0.3    htmltools_0.5.2  
-## [41] ellipsis_0.3.2    insight_0.17.0    utf8_1.2.2        stringi_1.7.6    
-## [45] crayon_1.5.1
+##  [1] jsonlite_1.8.4    compiler_4.3.0    Rcpp_1.0.10       zip_2.3.0        
+##  [5] jquerylib_0.1.4   yaml_2.3.7        fastmap_1.1.1     readxl_1.4.2     
+##  [9] readr_2.1.4       R6_2.5.1          curl_5.0.0        openxlsx_4.2.5.2 
+## [13] forcats_1.0.0     tibble_3.2.1      insight_0.19.2    tzdb_0.4.0       
+## [17] bslib_0.4.2       pillar_1.9.0      rlang_1.1.1       utf8_1.2.3       
+## [21] cachem_1.0.8      stringi_1.7.12    xfun_0.39         sass_0.4.6       
+## [25] cli_3.6.1         magrittr_2.0.3    digest_0.6.31     rstudioapi_0.14  
+## [29] haven_2.5.2       hms_1.1.3         lifecycle_1.0.3   vctrs_0.6.2      
+## [33] evaluate_0.21     glue_1.6.2        data.table_1.14.8 cellranger_1.1.0 
+## [37] fansi_1.0.4       foreign_0.8-84    tools_4.3.0       pkgconfig_2.0.3  
+## [41] htmltools_0.5.5
 ```

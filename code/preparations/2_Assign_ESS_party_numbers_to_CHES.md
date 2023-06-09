@@ -25,6 +25,12 @@ library(dplyr)
 ```
 
 ```
+## The following object is masked from 'package:sjlabelled':
+## 
+##     as_label
+```
+
+```
 ## The following objects are masked from 'package:stats':
 ## 
 ##     filter, lag
@@ -162,10 +168,12 @@ table(CHES_2014$cntry,useNA="always")
 
 ```
 ## 
-##   AT   BE  bul   CH  cro  cyp   CZ   DE   DK   EE   ES   FI   FR   GB  gre   HU 
-##    7   13   11   11   11    6    9   10    9    6   14    8   13    7    9    6 
-##   IE   it  lat   LT  lux  mal   NL   NO   PL   PT  rom   SE   SI  slo  tur <NA> 
-##    7   13    7    8    6    2   11    8    8    6    9   10    9   10    4    0
+##   AT   BE  bul   CH  cro  cyp   CZ   DE   DK   EE   ES   FI   FR   GB  gre 
+##    7   13   11   11   11    6    9   10    9    6   14    8   13    7    9 
+##   HU   IE   it  lat   LT  lux  mal   NL   NO   PL   PT  rom   SE   SI  slo 
+##    6    7   13    7    8    6    2   11    8    8    6    9   10    9   10 
+##  tur <NA> 
+##    4    0
 ```
 
 # Recode party names as they are in ESS
@@ -391,8 +399,8 @@ CHES_2014[CHES_2014$cntry=="CZ","party_name"]
 ```
 
 ```
-## [1] "CSSD"     "ODS"      "KSCM"     "KDU-CSL"  "SZ"       "TOP09"    "ANO2011" 
-## [8] "USVIT"    "SVOBODNI"
+## [1] "CSSD"     "ODS"      "KSCM"     "KDU-CSL"  "SZ"       "TOP09"   
+## [7] "ANO2011"  "USVIT"    "SVOBODNI"
 ```
 
 ```r
@@ -1414,10 +1422,10 @@ table(CHES_2014$pt.nmbr,useNA="always")
 
 ```
 ## 
-##    0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15 
-##  105   20   18   19   16   17   13   16   13    9    9    4    3    3    2    1 
-## <NA> 
-##    0
+##    0    1    2    3    4    5    6    7    8    9   10   11   12   13   14 
+##  105   20   18   19   16   17   13   16   13    9    9    4    3    3    2 
+##   15 <NA> 
+##    1    0
 ```
 
 ```r
@@ -1428,8 +1436,10 @@ table(CHES_2014$pt.nmbr,useNA="always")
 
 ```
 ## 
-##    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15 <NA> 
-##   20   18   19   16   17   13   16   13    9    9    4    3    3    2    1  105
+##    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15 
+##   20   18   19   16   17   13   16   13    9    9    4    3    3    2    1 
+## <NA> 
+##  105
 ```
 
 ```r
@@ -1439,8 +1449,17 @@ CHES_2014.vote.keys<-left_join(
   y=vote.dat,
   by=c("cntry","pt.nmbr")
 )
+```
 
+```
+## Warning in left_join(x = CHES_2014, y = vote.dat, by = c("cntry", "pt.nmbr")): Detected an unexpected many-to-many relationship between `x` and `y`.
+## ℹ Row 23 of `x` matches multiple rows in `y`.
+## ℹ Row 73 of `y` matches multiple rows in `x`.
+## ℹ If a many-to-many relationship is expected, set `relationship =
+##   "many-to-many"` to silence this warning.
+```
 
+```r
 # exclude the country-specific party number variables
 CHES_2014.vote.keys<-
   CHES_2014.vote.keys[,-which(names(CHES_2014.vote.keys) %in% nmbr.vars)]
@@ -1485,31 +1504,32 @@ print(s,locale=F)
 ```
 
 ```
-## R version 4.2.0 (2022-04-22 ucrt)
+## R version 4.3.0 (2023-04-21 ucrt)
 ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-## Running under: Windows 10 x64 (build 19043)
+## Running under: Windows 10 x64 (build 19045)
 ## 
 ## Matrix products: default
+## 
 ## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] dplyr_1.0.9 rio_0.5.29 
+## [1] dplyr_1.1.2      sjlabelled_1.2.0 rio_0.5.29       knitr_1.42      
+## [5] rmarkdown_2.21  
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] zip_2.2.0         Rcpp_1.0.8.3      cellranger_1.1.0  bslib_0.3.1      
-##  [5] compiler_4.2.0    pillar_1.7.0      jquerylib_0.1.4   forcats_0.5.1    
-##  [9] tools_4.2.0       digest_0.6.29     jsonlite_1.8.0    evaluate_0.15    
-## [13] lifecycle_1.0.1   tibble_3.1.6      pkgconfig_2.0.3   rlang_1.0.2      
-## [17] openxlsx_4.2.5    cli_3.3.0         rstudioapi_0.13   curl_4.3.2       
-## [21] yaml_2.3.5        haven_2.5.0       xfun_0.30         fastmap_1.1.0    
-## [25] stringr_1.4.0     knitr_1.39        generics_0.1.2    vctrs_0.4.1      
-## [29] sass_0.4.1        hms_1.1.1         tidyselect_1.1.2  glue_1.6.2       
-## [33] data.table_1.14.2 R6_2.5.1          fansi_1.0.3       readxl_1.4.0     
-## [37] foreign_0.8-82    rmarkdown_2.14    purrr_0.3.4       magrittr_2.0.3   
-## [41] htmltools_0.5.2   ellipsis_0.3.2    utf8_1.2.2        stringi_1.7.6    
-## [45] crayon_1.5.1
+##  [1] jsonlite_1.8.4    compiler_4.3.0    tidyselect_1.2.0  Rcpp_1.0.10      
+##  [5] zip_2.3.0         jquerylib_0.1.4   yaml_2.3.7        fastmap_1.1.1    
+##  [9] readxl_1.4.2      readr_2.1.4       R6_2.5.1          generics_0.1.3   
+## [13] curl_5.0.0        openxlsx_4.2.5.2  forcats_1.0.0     tibble_3.2.1     
+## [17] insight_0.19.2    tzdb_0.4.0        bslib_0.4.2       pillar_1.9.0     
+## [21] rlang_1.1.1       utf8_1.2.3        cachem_1.0.8      stringi_1.7.12   
+## [25] xfun_0.39         sass_0.4.6        cli_3.6.1         magrittr_2.0.3   
+## [29] digest_0.6.31     rstudioapi_0.14   haven_2.5.2       hms_1.1.3        
+## [33] lifecycle_1.0.3   vctrs_0.6.2       evaluate_0.21     glue_1.6.2       
+## [37] data.table_1.14.8 cellranger_1.1.0  fansi_1.0.4       foreign_0.8-84   
+## [41] tools_4.3.0       pkgconfig_2.0.3   htmltools_0.5.5
 ```
 
 
