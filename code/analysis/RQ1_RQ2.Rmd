@@ -12,7 +12,7 @@ date: '2022-05-02'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Preregistration available From: https://osf.io/er4v5?view_only=edf4718aa62947dc9277c4a4749e4628
+Preregistration available From: https://osf.io/er4v5
 
 RQ1. Is childlessness associated with the three Chapel Hill rated political ideology (Left-Right, Economic Left-Right, GAL-TAN) positions of the party for which one has voted? 
 
@@ -622,9 +622,11 @@ p1<-ggplot(p.ex,aes(y=yvar,x=xvar,color=galtan_salience))+
 p1
 
 png(filename = 
-      "../../results/figures/galtan_galtan_salience_nonextrp.png",
+      "results/figures/Figure 1.png",
     units = "cm",
-    width = 29.7,height=21.0,res = 600)
+    #width = 29.7,height=21.0,
+    width = 18.0,height=18/(29.7/21),
+    res = 2000)
 p1
 dev.off()
 
